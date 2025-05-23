@@ -1,13 +1,11 @@
 import { AppText } from '@/components/AppText';
 import { AppBar } from '@/components/ui/AppBar';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
-import paths from '@/utils/paths';
+import { fetchOrganizationName } from '@/utils/helpers';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import React from 'react';
-import { Alert, Image, ScrollView, StyleSheet, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Image, ScrollView, StyleSheet, View } from 'react-native';
 
 
 interface ProfileProps {
@@ -45,14 +43,20 @@ const profileInfos: ProfileProps[] = [
 
 const Profile = () => {
   const navigation = useNavigation()
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
-  const logout = async () => {
-    await supabase.auth.signOut();
-    await AsyncStorage.clear();
-    Alert.alert('Logged out of agrinova360!')
-    navigation.navigate(paths.auth.login as never);
-  };
+  const [orgName, setOrgName] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getOrganization = async () => {
+      if (!user?.organization_id) return;
+      const name = await fetchOrganizationName(user.organization_id);
+      setOrgName(name);
+    };
+
+    getOrganization();
+  }, [user]);
+
 
   return (
     <ScrollView style={{ backgroundColor: 'white', flex: 1, padding: 15 }}>
@@ -64,7 +68,7 @@ const Profile = () => {
           color="black"
           onPress={() => navigation.goBack()} />}
         onRight={<Ionicons
-          name='log-out'
+          name='log-out-outline'
           size={28}
           color="black"
           onPress={logout} />} />
@@ -84,7 +88,7 @@ const Profile = () => {
       </View>
       <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 10 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <AppText style={{ fontWeight: 400 }}>{user?.role} @ {user?.farm_name}</AppText>
+          <AppText style={{ fontWeight: 400 }}>{user?.role} @ {orgName}</AppText>
           <Ionicons name='share-social-outline' size={18} color='green' />
         </View>
         <AppText style={{ fontWeight: 600 }}>{user?.fullname}</AppText>

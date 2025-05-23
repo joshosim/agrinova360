@@ -2,7 +2,7 @@ import React, { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 interface AppBarProps {
-  title: string | undefined;
+  title: string | null;
   onGoBack?: ReactNode;
   onRight?: ReactNode;
 }

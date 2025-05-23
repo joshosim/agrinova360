@@ -1,16 +1,14 @@
 import { AppText } from '@/components/AppText';
 import AuthTextFields from '@/components/AuthTextFields';
 import { Colors } from '@/constants/Colors';
-import { supabase } from '@/lib/supabase';
-import { generateFarmCode } from '@/utils/helpers';
+import { useAuth } from '@/context/AuthContext';
 import paths from '@/utils/paths';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import { Alert, Platform, RootViewStyleProvider, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-// N6SGVE
+
 const AuthSignup = () => {
   const [email, setEmail] = useState<string>("")
   const [fullname, setFullname] = useState<string>("")
@@ -18,97 +16,20 @@ const AuthSignup = () => {
   const [password, setPassword] = useState<string>("")
   const [farmName, setFarmName] = useState<string>("")
   const [farmAddress, setFarmAddress] = useState<string>("")
+  const { signupAsManager, loading } = useAuth();
 
   const navigation = useNavigation<NavigationProp<RootViewStyleProvider>>();
 
   const signUpTextFn = async () => {
     try {
-      const role = 'Manager';
-      const farmCode = generateFarmCode();
-
-      // 1. Sign up user to auth
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            fullname,
-            phone,
-            role,
-            farm_code: farmCode,
-            name: farmName,
-            address: farmAddress
-          },
-        },
-      });
-
-      if (error) throw error;
-
-      const userId = data.user?.id;
-
-      if (userId) {
-        // 2. Insert into organizations
-        const { data: orgDataArr, error: orgError } = await supabase
-          .from('organizations')
-          .insert([
-            {
-              name: farmName,
-              address: farmAddress,
-              farm_code: farmCode,
-            }
-          ])
-          .select();
-
-        if (orgError) throw orgError;
-
-        const orgData = orgDataArr?.[0];
-
-        if (!orgData) throw new Error("Organization insert failed. No data returned.");
-
-        const organization_id = orgData.id;
-
-        // 3. Insert profile with organization_id
-        const { error: profileError } = await supabase.from('profiles').insert([
-          {
-            id: userId,
-            email,
-            fullname,
-            phone,
-            role,
-            organization_id,
-            farm_name: farmName,
-            farm_address: farmAddress
-
-          }
-        ]);
-
-        if (profileError) throw profileError;
-
-        // Save full user profile to AsyncStorage
-        const userProfile = {
-          user_id: userId,
-          email,
-          fullname,
-          phone,
-          role,
-          farm_name: farmName,
-          farm_address: farmAddress,
-          farm_code: farmCode,
-          organization_id,
-        };
-
-        await AsyncStorage.setItem('user_profile', JSON.stringify(userProfile));
-
-        Alert.alert("Success", `Manager account created.\nFarm Code: ${farmCode}\nCheck your email to verify your account.`);
-        navigation.navigate(paths.home as never);
-      }
-
+      await signupAsManager(email, password, fullname, farmName, phone, farmAddress);
+      Alert.alert("Success", "Manager account created. Check your email to verify your account.");
+      navigation.navigate(paths.home as never);
     } catch (error: any) {
       console.error("Signup Error:", error.message);
       Alert.alert("Error", error.message);
     }
   };
-
 
 
   return (
@@ -165,8 +86,7 @@ const AuthSignup = () => {
 
       <TouchableOpacity style={styles.button}
         onPress={signUpTextFn}>
-        {/* onPress={goHome}> */}
-        <AppText style={styles.buttonText}>Sign up</AppText>
+        <AppText style={styles.buttonText}> {loading ? "Signing up..." : 'Sign up'}</AppText>
       </TouchableOpacity>
     </ScrollView>
   )

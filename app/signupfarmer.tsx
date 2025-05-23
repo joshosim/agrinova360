@@ -1,10 +1,9 @@
 import { AppText } from '@/components/AppText';
 import AuthTextFields from '@/components/AuthTextFields';
 import { Colors } from '@/constants/Colors';
-import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 import paths from '@/utils/paths';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
@@ -19,89 +18,18 @@ const FarmerSignup = () => {
 
   const navigation = useNavigation<NavigationProp<RootViewStyleProvider>>();
 
-  const goHome = () => {
-    navigation.navigate(paths.home as never)
-  }
+  const { signupAsFarmer } = useAuth();
 
   const signUpTextFn = async () => {
-    if (!email || !password || !fullname || !phone || !farmCode) {
-      Alert.alert("Missing fields", "Please fill all fields");
-      return;
-    }
-
-    // Step 1: Look up organization by farm code
-    const { data: orgData, error: orgError } = await supabase
-      .from('organizations')
-      .select('id')
-      .eq('farm_code', farmCode)
-      .single();
-
-    if (orgError || !orgData) {
-      Alert.alert("Invalid Farm Code", "No organization found with that farm code.");
-      return;
-    }
-
-    const organizationId = orgData.id;
-
-    // Step 2: Sign up the user
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password
-    });
-
-    if (signUpError) {
-      Alert.alert("Signup error", signUpError.message);
-      return;
-    }
-
-    const user = signUpData.user;
-    if (!user) {
-      Alert.alert("Signup error", "User not created");
-      return;
-    }
-
-    // Step 3: Save farmer profile with organization_id
-    const profilePayload = {
-      id: user.id,
-      fullname,
-      phone,
-      farm_code: farmCode,
-      email,
-      role: 'Farmer',
-      organization_id: organizationId, // 💡 the important part
-    };
-
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .insert([profilePayload]);
-
-    if (profileError) {
-      Alert.alert("Profile save error", profileError.message);
-      return;
-    }
-
-    // Step 4: Save user data locally
-    const userData = {
-      id: user.id,
-      email,
-      fullname,
-      phone,
-      farm_code: farmCode,
-      role: 'Farmer',
-      organization_id: organizationId,
-    };
-
     try {
-      await AsyncStorage.setItem("userData", JSON.stringify(userData));
-    } catch (err) {
-      console.error("Failed to save user data:", err);
+      await signupAsFarmer(email, password, fullname, phone, farmCode);
+      Alert.alert("Success", "Farmer account created. Check your email to verify your account.");
+      navigation.navigate(paths.home as never);
+    } catch (error: any) {
+      console.error("Signup Error:", error.message);
+      Alert.alert("Error", error.message);
     }
-
-    Alert.alert("Success", "Farmer account created!");
-    goHome();
   };
-
-
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -152,7 +80,6 @@ const FarmerSignup = () => {
 
       <TouchableOpacity style={styles.button}
         onPress={signUpTextFn}>
-        {/* // onPress={goHome}> */}
         <AppText style={styles.buttonText}>Sign up</AppText>
       </TouchableOpacity>
     </ScrollView>

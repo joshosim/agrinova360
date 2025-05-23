@@ -1,8 +1,9 @@
 import { AppText } from '@/components/AppText'
+import { useAuth } from '@/context/AuthContext'
 import paths from '@/utils/paths'
 import { Ionicons } from '@expo/vector-icons'
 import { NavigationProp, useNavigation } from '@react-navigation/native'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { RootStackParamList } from './(tabs)/inventory'
 
@@ -11,6 +12,14 @@ export default function Register() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>()
 
   const [open, setOpen] = useState<boolean>(false)
+
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigation.navigate(paths.home as never); // or your actual home route
+    }
+  }, [user, loading]);
 
 
   return (

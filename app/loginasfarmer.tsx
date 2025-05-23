@@ -2,78 +2,36 @@ import { AppText } from '@/components/AppText';
 import AuthTextFields from '@/components/AuthTextFields';
 import { HelloWave } from '@/components/HelloWave';
 import { Colors } from '@/constants/Colors';
-import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 import paths from '@/utils/paths';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { NavigationProp, RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import { Alert, Platform, RootViewStyleProvider, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function AuthLoginAsFarmer() {
-  const route = useRoute<RouteProp<Record<string, any>, string>>();
-  const { role } = route.params || {};
-  console.log(role)
+
   const [email, setEmail] = useState<string>("")
   const [password, setPassword] = useState<string>("")
-  const [farmCode, setFarmCode] = useState<string>("")
 
   const navigation = useNavigation<NavigationProp<RootViewStyleProvider>>();
 
   const goToSignup = () => {
     navigation.navigate(paths.signupfarmer as never)
   }
+  const { login } = useAuth(); // use the provider's login function
 
   const handleLogin = async () => {
     try {
-      // 1. Sign in with Supabase
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      const userId = data.user?.id;
-
-      // 2. Fetch profile info from 'profiles' table
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (profileError) throw profileError;
-
-      // 3. Check farmCode for farmers
-      if (
-        !farmCode ||
-        !profile.farm_code ||
-        farmCode.trim().toLowerCase() !== profile.farm_code.trim().toLowerCase()
-      ) {
-        throw new Error('Invalid farm code');
-      }
-
-      // 4. Save auth info to AsyncStorage
-      await AsyncStorage.multiSet([
-        ['user_id', userId],
-        ['email', email],
-        ['role', role],
-        ['fullname', profile.fullname],
-        ['farm_name', profile.farm_name || ''],
-        ['farm_address', profile.farm_address || ''],
-        ['farm_code', profile.farm_code || ''],
-      ]);
-
-      Alert.alert('Login was successfull!');
+      await login(email, password);
+      Alert.alert('Login Successful');
       navigation.navigate(paths.home as never);
     } catch (error: any) {
-      console.log('Login Error:', error.message);
+      console.error('Login Error:', error.message);
       Alert.alert('Login Failed', error.message);
     }
   };
-
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -101,15 +59,7 @@ export default function AuthLoginAsFarmer() {
             onChange={(text) => setPassword(text)}
             value={password}
             placeHolderText='Password' />
-          {role === 'Farmer' && (
-            <AuthTextFields
-              keyBoardType='default'
-              title="Farm Code"
-              onChange={(text) => setFarmCode(text)}
-              value={farmCode}
-              placeHolderText='#FARMCODE'
-            />
-          )}
+
           <TouchableOpacity
             style={{ flexDirection: 'row', gap: 2, alignItems: 'center', justifyContent: 'center' }}
             onPress={goToSignup}>

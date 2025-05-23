@@ -3,11 +3,12 @@ import { AppBar } from '@/components/ui/AppBar';
 import { lightGreen, mainLight } from '@/constants/Colors';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { fetchOrganizationName, fetchWorkerCount } from '@/utils/helpers';
 import paths from '@/utils/paths';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, RootViewStyleProvider, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function HomePage() {
@@ -45,9 +46,34 @@ export default function HomePage() {
 
   console.log("user:", user)
 
+
+  const [orgName, setOrgName] = useState<string | null>(null);
+  const [orgWorkers, setOrgWorkers] = useState<number | null>(null);
+
+  useEffect(() => {
+    const getOrganization = async () => {
+      if (!user?.organization_id) return;
+      const name = await fetchOrganizationName(user.organization_id);
+      setOrgName(name);
+    };
+
+    getOrganization();
+  }, [user]);
+
+  useEffect(() => {
+    const loadWorkerCount = async () => {
+      if (!user?.organization_id) return;
+      const count = await fetchWorkerCount(user?.organization_id);
+      setOrgWorkers(count)
+      console.log('Worker count:', count);
+    };
+
+    loadWorkerCount();
+  }, [user]);
+
   const Card = ({ title, value, icon }: {
     title: string,
-    value: string | number,
+    value: number | null,
     icon?: any,
   }) => {
     return (
@@ -68,7 +94,7 @@ export default function HomePage() {
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
       {/* Farm Title */}
 
-      {!loading ? <AppBar title={user?.farm_name}
+      {!loading ? <AppBar title={orgName}
         onRight={
           <Ionicons name='log-in-outline'
             onPress={logout}
@@ -86,9 +112,10 @@ export default function HomePage() {
       <View>
         <AppText style={styles.sectionTitle}>Track Summary</AppText>
         <View style={styles.dashboardRow}>
-          {dashboardData.map(({ title, value, icon }, index) => (
-            <Card key={index} title={title} value={value} icon={icon} />
-          ))}
+          <Card title='Workers' value={orgWorkers} icon={require("../../assets/images/farmer.jpeg")} />
+          <Card title='Inventory' value={orgWorkers} icon={require("../../assets/images/inventory.jpeg")} />
+          <Card title='Income' value={orgWorkers} icon={require("../../assets/images/sales.jpeg")} />
+
         </View>
       </View>
       {/* Recent Transactions */}

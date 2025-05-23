@@ -1,11 +1,49 @@
 import { AppText } from '@/components/AppText';
 import { AppBar } from '@/components/ui/AppBar';
-import paths from '@/utils/paths';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FlatList, RootViewStyleProvider, StyleSheet, View } from 'react-native';
 
 const Workers = () => {
+
+  const { user } = useAuth()
+
+  const [workers, setWorkers] = useState<any[]>([])
+
+  const fetchWorkers = async (organizationId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .eq('role', 'Farmer');
+
+    if (error) {
+      console.error('Error fetching workers:', error.message);
+      return [];
+    }
+
+    return data;
+  };
+
+  useEffect(() => {
+    const getWorkers = async () => {
+      if (user?.organization_id) {
+        const workers = await fetchWorkers(user.organization_id);
+        console.log('Workers:', workers);
+        setWorkers(workers)
+
+        // Example: render worker names
+        workers.forEach(worker => {
+          console.log(worker.fullname);
+        });
+      }
+    }
+
+    getWorkers()
+
+  }, [user])
 
   const mockWorkers = [
     { id: '1', name: 'John Doe', role: 'Caretaker' },
@@ -14,20 +52,18 @@ const Workers = () => {
 
   const navigation = useNavigation<NavigationProp<RootViewStyleProvider>>();
 
-  const goToSignup = () => {
-    navigation.navigate(paths.auth.signup as never)
-  }
-
   return (
     <View style={styles.container}>
       <AppBar title='Workers' />
 
       <FlatList
-        data={mockWorkers}
+        data={workers}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.workerCard}>
-            <AppText style={styles.name}>{item.name}</AppText>
+            <AppText style={[styles.name, { fontWeight: 600 }]}>{item.fullname}</AppText>
+            <AppText style={styles.name}>{item.email}</AppText>
+            <AppText style={styles.name}>{item.phone}</AppText>
             <AppText style={styles.role}>{item.role}</AppText>
           </View>
         )}

@@ -2,10 +2,12 @@ import { AppText } from '@/components/AppText';
 import CustomBottomSheet from '@/components/BottomSheet';
 import { AppBar } from '@/components/ui/AppBar';
 import UnitDropdown from '@/components/UnitDropdown';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 import paths from '@/utils/paths';
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   FlatList,
@@ -21,60 +23,74 @@ export type RootStackParamList = {
 };
 
 const Inventory = () => {
-  // State for inventory items
-  const [inventoryItems, setInventoryItems] = useState([
-    { id: '1', item: 'Chicken Feed', quantity: 200, unit: 'kg' },
-    { id: '2', item: 'Egg trays', quantity: 100, unit: 'pcs' },
-    { id: '3', item: 'Antibiotics', quantity: 20, unit: 'bottles' },
-  ]);
-
-  // State for bottom sheet visibility
+  const [inventoryItems, setInventoryItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
   const [bottomSheetVisible, setBottomSheetVisible] = useState(false);
+  const [newItem, setNewItem] = useState({ item: '', quantity: '', unit: '' });
 
-  // State for new item form
-  const [newItem, setNewItem] = useState({
-    item: '',
-    quantity: '',
-    unit: ''
-  });
-
-  // Navigation
+  const { user } = useAuth();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
-  // Function to add new inventory item
-  const handleAddItem = () => {
-    // Basic validation
+  const fetchInventory = async () => {
+    if (!user?.organization_id) return;
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('inventory')
+      .select('*')
+      .eq('organization_id', user.organization_id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching inventory:', error.message);
+      Alert.alert('Error', 'Failed to load inventory');
+    } else {
+      setInventoryItems(data || []);
+    }
+
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchInventory();
+  }, []);
+
+  const handleAddItem = async () => {
     if (!newItem.item || !newItem.quantity || !newItem.unit) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
-    // Create new item with unique ID
-    const newInventoryItem = {
-      id: Date.now().toString(),
-      item: newItem.item,
-      quantity: parseInt(newItem.quantity) || 0,
-      unit: newItem.unit
+    if (!user || !user.organization_id) {
+      Alert.alert('Error', 'User not logged in or organization ID missing');
+      return;
+    }
+    console.log("User context:", user);
+    const payload = {
+      name: newItem.item,
+      quantity: parseInt(newItem.quantity),
+      unit: newItem.unit,
+      organization_id: user.organization_id,
+      created_by: user.id,
     };
 
-    // Add to inventory list
-    setInventoryItems([...inventoryItems, newInventoryItem]);
+    const { data, error } = await supabase.from('inventory').insert([payload]).single();
 
-    // Reset form
-    setNewItem({ item: '', quantity: '', unit: '' });
-
-    // Close bottom sheet
-    setBottomSheetVisible(false);
-
-    // Show success message
-    Alert.alert('Success', 'Inventory item added successfully');
+    if (error) {
+      console.error('Error adding inventory:', error.message);
+      Alert.alert('Error', 'Failed to add inventory item');
+    } else {
+      setInventoryItems([data, ...inventoryItems]);
+      setNewItem({ item: '', quantity: '', unit: '' });
+      setBottomSheetVisible(false);
+      Alert.alert('Success', 'Inventory item added');
+    }
   };
 
-  // Reset form when bottom sheet closes
   const handleBottomSheetClose = () => {
     setBottomSheetVisible(false);
     setNewItem({ item: '', quantity: '', unit: '' });
   };
+
 
   return (
     <View style={styles.container}>
@@ -95,7 +111,8 @@ const Inventory = () => {
             )}
             style={styles.card}
           >
-            <AppText style={styles.item}>{item.item}</AppText>
+            <AppText style={styles.item}>{item.name}</AppText>
+            <AppText style={styles.item}>{item.price}</AppText>
             <AppText style={styles.quantity}>{item.quantity} {item.unit}</AppText>
           </TouchableOpacity>
         )}

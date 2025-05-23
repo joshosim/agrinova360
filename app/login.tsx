@@ -3,10 +3,8 @@ import AuthTextFields from '@/components/AuthTextFields';
 import { HelloWave } from '@/components/HelloWave';
 import { Colors } from '@/constants/Colors';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
 import paths from '@/utils/paths';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
@@ -21,47 +19,18 @@ export default function AuthLogin() {
   const goToSignup = () => {
     navigation.navigate(paths.auth.signup as never)
   }
+  const { login } = useAuth(); // use the provider's login function
+
   const handleLogin = async () => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      const userId = data.user?.id;
-
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (profileError) throw profileError;
-
-      // ✅ Construct user data object
-      const userData = {
-        user_id: userId,
-        email,
-        role: profile.role,
-        fullname: profile.fullname,
-        farm_name: profile.farm_name || '',
-        farm_address: profile.farm_address || '',
-        farm_code: profile.farm_code || '',
-      };
-
-      // ✅ Save as a single object to AsyncStorage
-      await AsyncStorage.setItem('user_profile', JSON.stringify(userData));
-
-      Alert.alert('Login successful!');
+      await login(email, password);
+      Alert.alert('Login Successful');
       navigation.navigate(paths.home as never);
     } catch (error: any) {
-      console.log('Login Error:', error.message);
+      console.error('Login Error:', error.message);
       Alert.alert('Login Failed', error.message);
     }
   };
-
   const { user } = useAuth()
 
   console.log("logged-out-user", user)
@@ -103,6 +72,14 @@ export default function AuthLogin() {
               textDecorationColor: 'blue',
               color: 'blue',
             }}>Sign up here</AppText>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate(paths.auth.loginasfarmer as never)}>
+            <AppText style={{
+              textDecorationStyle: 'solid',
+              textDecorationLine: 'underline',
+              textDecorationColor: 'blue',
+              color: 'blue',
+            }}>Login as farmer here</AppText>
           </TouchableOpacity>
         </View>
       </View>
