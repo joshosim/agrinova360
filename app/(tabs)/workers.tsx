@@ -45,11 +45,6 @@ const Workers = () => {
 
   }, [user])
 
-  const mockWorkers = [
-    { id: '1', name: 'John Doe', role: 'Caretaker' },
-    { id: '2', name: 'Jane Smith', role: 'Supervisor' },
-  ];
-
   const navigation = useNavigation<NavigationProp<RootViewStyleProvider>>();
 
   return (

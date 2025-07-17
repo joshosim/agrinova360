@@ -13,7 +13,6 @@ export default function TabLayout() {
 
   return (
     <Tabs
-
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
@@ -25,7 +24,6 @@ export default function TabLayout() {
             position: 'absolute',
           },
           default: {},
-
         }),
       }}>
       <Tabs.Screen
@@ -66,7 +64,7 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   tabLabel: {
-    fontFamily: 'SpaceGrotesk',
+    fontFamily: 'SoraRegular',
     fontSize: 12,
   },
 });

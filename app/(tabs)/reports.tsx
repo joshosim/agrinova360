@@ -1,5 +1,6 @@
 import { AppText } from '@/components/AppText'
 import CustomBottomSheet from '@/components/BottomSheet'
+import FinancialReportTable from '@/components/FinancialRecord'
 import { AppBar } from '@/components/ui/AppBar'
 import { Ionicons } from '@expo/vector-icons'
 import { NavigationProp, useNavigation } from '@react-navigation/native'
@@ -61,82 +62,128 @@ const Reports = () => {
     setNewReport({ date: '', summary: '', casualties: '' })
   }
 
+  const [stateOfReport, setStateOfReport] = useState(0)
+
+  const changeStateOfReport = (theState: number) => {
+    setStateOfReport(theState)
+  }
+  const data = [
+    { id: '1', item: 'Egg Stands', quantity: 20, unit: 'boxes', unitPrice: 3500 },
+    { id: '2', item: 'Onion Bulb', quantity: 40, unit: 'bags', unitPrice: 18000 },
+  ];
   return (
     <View style={styles.container}>
-      <AppBar title='Farm Reports'
+      <AppBar title='Reports'
         onRight={<Ionicons
           name='add-circle'
           size={28}
           color="black"
           onPress={() => setBottomSheetVisible(true)} />} />
-      <FlatList
-        data={reports}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.reportCard}>
-            <AppText style={styles.date}>{item.date}</AppText>
-            <AppText style={styles.summary}>📝 Summary: {item.summary}</AppText>
-            <AppText style={styles.casualty}>⚠️ Casualties: {item.casualties}</AppText>
-          </View>
-        )}
-      />
-
-      {/* Bottom Sheet */}
-      <CustomBottomSheet
-        visible={bottomSheetVisible}
-        onClose={handleBottomSheetClose}
-        sheetHeight="60%"
-      >
-        <View style={styles.bottomSheetContent}>
-          <AppText style={styles.bottomSheetTitle}>Add New Report</AppText>
-
-          <View style={styles.formGroup}>
-            <AppText style={styles.label}>Date</AppText>
-            <TextInput
-              style={styles.input}
-              value={newReport.date}
-              onChangeText={(text) => setNewReport({ ...newReport, date: text })}
-              placeholder="e.g. 2025-04-30"
-            />
-          </View>
-
-          <View style={styles.formGroup}>
-            <AppText style={styles.label}>Summary</AppText>
-            <TextInput
-              style={styles.input}
-              value={newReport.summary}
-              onChangeText={(text) => setNewReport({ ...newReport, summary: text })}
-              placeholder="e.g. Collected 200 eggs..."
-            />
-          </View>
-
-          <View style={styles.formGroup}>
-            <AppText style={styles.label}>Casualties</AppText>
-            <TextInput
-              style={styles.input}
-              value={newReport.casualties}
-              onChangeText={(text) => setNewReport({ ...newReport, casualties: text })}
-              placeholder="e.g. 1 chick died"
-            />
-          </View>
-
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={handleBottomSheetClose}
-            >
-              <AppText style={styles.cancelButtonText}>Cancel</AppText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={handleAddReport}
-            >
-              <AppText style={styles.addButtonText}>Add Report</AppText>
-            </TouchableOpacity>
-          </View>
+      <View>
+        <View style={styles.topBarNav}>
+          <TouchableOpacity style={{
+            borderBottomWidth: stateOfReport === 0 ? 2 : 0,
+            borderBottomColor: 'black',
+            paddingBottom: 5
+          }} onPress={() => changeStateOfReport(0)}>
+            <AppText>Financial </AppText>
+          </TouchableOpacity>
+          <TouchableOpacity style={{
+            borderBottomWidth: stateOfReport === 1 ? 2 : 0,
+            borderBottomColor: 'black',
+            paddingBottom: 5
+          }} onPress={() => changeStateOfReport(1)}>
+            <AppText>Farm </AppText>
+          </TouchableOpacity>
+          <TouchableOpacity style={{
+            borderBottomWidth: stateOfReport === 2 ? 2 : 0,
+            borderBottomColor: 'black',
+            paddingBottom: 5
+          }} onPress={() => changeStateOfReport(2)}>
+            <AppText>Weather </AppText>
+          </TouchableOpacity>
         </View>
-      </CustomBottomSheet>
+      </View>
+      <View>
+        <View style={{ display: stateOfReport === 0 ? "flex" : "none" }}>
+          <AppText>Financial Report</AppText>
+          <FinancialReportTable />
+          <AppText>J</AppText>
+        </View>
+        <View style={{ display: stateOfReport === 1 ? "flex" : "none" }}>
+          <FlatList
+            data={reports}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <View style={styles.reportCard}>
+                <AppText style={styles.date}>{item.date}</AppText>
+                <AppText style={styles.summary}>📝 Summary: {item.summary}</AppText>
+                <AppText style={styles.casualty}>⚠️ Casualties: {item.casualties}</AppText>
+              </View>
+            )}
+          />
+
+          {/* Bottom Sheet */}
+          <CustomBottomSheet
+            visible={bottomSheetVisible}
+            onClose={handleBottomSheetClose}
+            sheetHeight="60%"
+          >
+            <View style={styles.bottomSheetContent}>
+              <AppText style={styles.bottomSheetTitle}>Add New Report</AppText>
+
+              <View style={styles.formGroup}>
+                <AppText style={styles.label}>Date</AppText>
+                <TextInput
+                  style={styles.input}
+                  value={newReport.date}
+                  onChangeText={(text) => setNewReport({ ...newReport, date: text })}
+                  placeholder="e.g. 2025-04-30"
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <AppText style={styles.label}>Summary</AppText>
+                <TextInput
+                  style={styles.input}
+                  value={newReport.summary}
+                  onChangeText={(text) => setNewReport({ ...newReport, summary: text })}
+                  placeholder="e.g. Collected 200 eggs..."
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <AppText style={styles.label}>Casualties</AppText>
+                <TextInput
+                  style={styles.input}
+                  value={newReport.casualties}
+                  onChangeText={(text) => setNewReport({ ...newReport, casualties: text })}
+                  placeholder="e.g. 1 chick died"
+                />
+              </View>
+
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={handleBottomSheetClose}
+                >
+                  <AppText style={styles.cancelButtonText}>Cancel</AppText>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.addButton}
+                  onPress={handleAddReport}
+                >
+                  <AppText style={styles.addButtonText}>Add Report</AppText>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </CustomBottomSheet>
+        </View>
+        <View style={{ display: stateOfReport === 2 ? "flex" : "none" }}>
+          <AppText>Weather Report</AppText>
+        </View>
+      </View>
     </View>
   )
 }
@@ -215,5 +262,11 @@ const styles = StyleSheet.create({
     color: '#555',
     textAlign: 'center',
     fontWeight: 'bold'
+  },
+  topBarNav: {
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexDirection: 'row',
+    paddingVertical: 10
   }
 });

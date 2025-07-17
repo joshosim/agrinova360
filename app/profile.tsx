@@ -2,10 +2,10 @@ import { AppText } from '@/components/AppText';
 import { AppBar } from '@/components/ui/AppBar';
 import { useAuth } from '@/context/AuthContext';
 import { fetchOrganizationName } from '@/utils/helpers';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
-import { Image, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 
 interface ProfileProps {
@@ -57,21 +57,16 @@ const Profile = () => {
     getOrganization();
   }, [user]);
 
-
   return (
     <ScrollView style={{ backgroundColor: 'white', flex: 1, padding: 15 }}>
       <AppBar title='Profile'
 
-        onGoBack={<Ionicons
-          name='arrow-back'
+        onGoBack={<MaterialIcons
+          name='arrow-back-ios'
           size={28}
           color="black"
           onPress={() => navigation.goBack()} />}
-        onRight={<Ionicons
-          name='log-out-outline'
-          size={28}
-          color="black"
-          onPress={logout} />} />
+        onRight={<View></View>} />
 
       <View style={{ alignItems: 'center', justifyContent: 'center', position: 'relative', marginTop: 50 }}>
         <Image source={require("../assets/images/ukaosim.jpg")}
@@ -102,19 +97,32 @@ const Profile = () => {
           return (
             <View key={index} style={{
               flexDirection: 'row', alignItems: 'center',
-              justifyContent: 'space-between', backgroundColor: '#ece4e7',
-              padding: 15, borderRadius: 10, marginBottom: 10
+              justifyContent: 'space-between', backgroundColor: '#EDD6C8',
+              padding: 20, borderRadius: 10, marginBottom: 10
             }}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <Ionicons size={25} name={item.startIcon} color={"black"} />
                 <AppText>{item.title}</AppText>
               </View>
-              <Ionicons size={18} name="pencil" color={"black"} />
+              <MaterialIcons size={18} name="arrow-forward-ios" color={"black"} />
             </View>
           )
         })}
       </View>
+      <TouchableOpacity style={{
+        flexDirection: 'row', alignItems: 'center',
+        justifyContent: 'space-between', backgroundColor: '#EDD6C8',
+        padding: 20, borderRadius: 10, marginBottom: 10
+      }}
+        onPress={logout}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <Ionicons size={25} name="log-out-outline" color={"black"} />
+          <AppText>Logout</AppText>
+        </View>
+        <MaterialIcons size={18} name="arrow-forward-ios" color={"black"} />
+      </TouchableOpacity>
     </ScrollView>
   )
 }

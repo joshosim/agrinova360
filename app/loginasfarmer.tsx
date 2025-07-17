@@ -20,8 +20,8 @@ export default function AuthLoginAsFarmer() {
   const goToSignup = () => {
     navigation.navigate(paths.signupfarmer as never)
   }
-  const { login } = useAuth(); // use the provider's login function
-
+  const { login, loading, user } = useAuth(); // use the provider's login function
+  console.log('user @ login', user)
   const handleLogin = async () => {
     try {
       await login(email, password);
@@ -75,7 +75,7 @@ export default function AuthLoginAsFarmer() {
       </View>
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <AppText style={styles.buttonText}>Login</AppText>
+        <AppText style={styles.buttonText}>{loading ? "Logging in..." : "Login"}</AppText>
       </TouchableOpacity>
     </ScrollView>
   )

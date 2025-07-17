@@ -7,6 +7,6 @@ export const AppText = ({ style, ...props }: TextProps) => {
 
 const styles = StyleSheet.create({
   text: {
-    fontFamily: 'SpaceGrotesk',
+    fontFamily: 'SoraRegular',
   },
 });

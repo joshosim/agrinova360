@@ -19,7 +19,7 @@ export default function AuthLogin() {
   const goToSignup = () => {
     navigation.navigate(paths.auth.signup as never)
   }
-  const { login } = useAuth(); // use the provider's login function
+  const { login, loading } = useAuth(); // use the provider's login function
 
   const handleLogin = async () => {
     try {
@@ -85,7 +85,7 @@ export default function AuthLogin() {
       </View>
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <AppText style={styles.buttonText}>Login</AppText>
+        <AppText style={styles.buttonText}>{loading ? "Logging in" : "Login"}</AppText>
       </TouchableOpacity>
     </ScrollView>
   )

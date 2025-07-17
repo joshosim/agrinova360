@@ -38,3 +38,15 @@ export const fetchOrganizationName = async (organizationId: string) => {
 
   return data.name;
 };
+
+export const fetchUserThatUploadedInventory = async (created_by: string) => {
+  const { data, error } = await supabase
+    .from('inventory')
+    .select('fullname')
+    .eq('id', created_by)
+    .single();
+
+  if (error) throw error;
+  return data.fullname
+
+}

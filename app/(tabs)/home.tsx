@@ -5,28 +5,13 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { fetchOrganizationName, fetchWorkerCount } from '@/utils/helpers';
 import paths from '@/utils/paths';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
-import React, { useEffect, useState } from 'react';
+import { DrawerActions, NavigationProp, useNavigation } from '@react-navigation/native';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { Image, RootViewStyleProvider, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function HomePage() {
-
-  const dashboardData = [
-    {
-      title: "Workers", value: 12,
-      icon: require("../../assets/images/farmer.jpeg")
-    },
-    {
-      title: "Inventory", value: 38,
-      icon: require("../../assets/images/inventory.jpeg")
-    },
-    {
-      title: "Income", value: "₦450,000",
-      icon: require("../../assets/images/sales.jpeg")
-    },
-  ];
 
   const recentTransactions = [
     { id: '1', title: "Sold Eggs", amount: "₦5,000" },
@@ -41,14 +26,28 @@ export default function HomePage() {
   ];
 
   const navigation = useNavigation<NavigationProp<RootViewStyleProvider>>();
-  // joshuauka0@gmail.com - - ZHDFUC
+
   const { user, loading } = useAuth();
 
   console.log("user:", user)
 
-
   const [orgName, setOrgName] = useState<string | null>(null);
   const [orgWorkers, setOrgWorkers] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => (
+        <TouchableOpacity
+          onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
+          style={{ marginLeft: 15 }}
+        >
+          <Ionicons name="menu" size={24} />
+        </TouchableOpacity>
+      ),
+      headerShown: true,
+      title: 'home',
+    });
+  }, [navigation]);
 
   useEffect(() => {
     const getOrganization = async () => {
@@ -96,20 +95,23 @@ export default function HomePage() {
 
       {!loading ? <AppBar title={orgName}
         onRight={
-          <Ionicons name='log-in-outline'
-            onPress={logout}
-            size={28} color={'black'}
-          />
-        }
-        onGoBack={
-          <Ionicons name='menu-outline'
+          <MaterialIcons name='person'
             onPress={() => navigation.navigate(paths.profile as never)}
             size={28} color={'black'}
           />
         }
+        onGoBack={
+          <View style={{ backgroundColor: 'white', padding: 10, borderRadius: 100 }}>
+            <MaterialIcons name='menu'
+              onPress={() => navigation.navigate(paths.profile as never)}
+              size={28} color={'black'}
+            />
+          </View>
+        }
       /> : <AppText>Loading...</AppText>}
       {/* Dashboard Summary */}
       <View>
+        <AppText style={{ marginBottom: 4 }}>Hi, {user?.fullname}</AppText>
         <AppText style={styles.sectionTitle}>Track Summary</AppText>
         <View style={styles.dashboardRow}>
           <Card title='Workers' value={orgWorkers} icon={require("../../assets/images/farmer.jpeg")} />

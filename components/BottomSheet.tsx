@@ -1,12 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import {
-  View,
-  StyleSheet,
-  Modal,
-  TouchableWithoutFeedback,
   Animated,
   Dimensions,
-  PanResponder
+  Modal,
+  PanResponder,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  View
 } from 'react-native';
 
 const { height } = Dimensions.get('window');
@@ -123,6 +123,9 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',
+    borderTopRightRadius: 20,
+    borderTopLeftRadius: 20,
+    backgroundColor: 'transparent'
   },
   background: {
     flex: 1,

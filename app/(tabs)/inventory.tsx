@@ -1,9 +1,11 @@
 import { AppText } from '@/components/AppText';
 import CustomBottomSheet from '@/components/BottomSheet';
 import { AppBar } from '@/components/ui/AppBar';
+import CameraScreen from '@/components/ui/CameraScreen';
 import UnitDropdown from '@/components/UnitDropdown';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { fetchUserThatUploadedInventory } from '@/utils/helpers';
 import paths from '@/utils/paths';
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
@@ -23,6 +25,7 @@ export type RootStackParamList = {
 };
 
 const Inventory = () => {
+
   const [inventoryItems, setInventoryItems] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [bottomSheetVisible, setBottomSheetVisible] = useState(false);
@@ -91,7 +94,6 @@ const Inventory = () => {
     setNewItem({ item: '', quantity: '', unit: '' });
   };
 
-
   return (
     <View style={styles.container}>
 
@@ -104,19 +106,26 @@ const Inventory = () => {
       <FlatList
         data={inventoryItems}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => navigation.navigate(
-              paths.viewInventory as any, { item } as never
-            )}
-            style={styles.card}
-          >
-            <AppText style={styles.item}>{item.name}</AppText>
-            <AppText style={styles.item}>{item.price}</AppText>
-            <AppText style={styles.quantity}>{item.quantity} {item.unit}</AppText>
-          </TouchableOpacity>
-        )}
+        renderItem={({ item }) => {
+          console.log("make i check", fetchUserThatUploadedInventory(item.created_by))
+          console.log("makcre", item.created_by)
+          return (
+            <TouchableOpacity
+              onPress={() => navigation.navigate(
+                paths.viewInventory as any, { item } as never
+              )}
+              style={styles.card}
+            >
+              <AppText style={styles.item}>{item.name}</AppText>
+              {/* <AppText style={styles.item}>{fetchUserThatUploadedInventory(item.created_by)}</AppText> */}
+              <AppText style={styles.quantity}>{item.quantity} {item.unit}</AppText>
+              <AppText style={styles.quantity}>By ...</AppText>
+            </TouchableOpacity>
+          )
+        }}
       />
+
+      <CameraScreen />
 
       {/* Custom Bottom Sheet */}
       <CustomBottomSheet
@@ -237,7 +246,8 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     borderRadius: 8,
     padding: 10,
-    fontSize: 16
+    fontSize: 16,
+    fontFamily: 'SoraRegular'
   },
   buttonContainer: {
     flexDirection: 'row',

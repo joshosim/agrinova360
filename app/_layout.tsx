@@ -6,14 +6,16 @@ import 'react-native-reanimated';
 
 import { AuthProvider } from '@/context/AuthContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { useEffect, useState } from 'react';
-import { View, ActivityIndicator } from 'react-native';
 import { supabase } from '@/lib/supabase';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
-    SpaceGrotesk: require('../assets/fonts/SpaceGrotesk-Regular.ttf'),
+    SoraRegular: require('../assets/fonts/Sora-Regular.ttf'),
+    SoraBold: require('../assets/fonts/Sora-Bold.ttf'),
+    SoraThin: require('../assets/fonts/Sora-Thin.ttf')
   });
 
   const [initialRoute, setInitialRoute] = useState<string | null>(null);
