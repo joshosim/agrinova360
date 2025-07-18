@@ -1,5 +1,5 @@
 import HomePage from '@/app/(tabs)/home';
-import Profile from '@/app/profile';
+import Profile from '@/app/Profile';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 const Stack = createNativeStackNavigator();

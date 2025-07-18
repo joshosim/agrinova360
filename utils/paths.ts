@@ -1,24 +1,24 @@
 
 const paths = {
-  home: "(tabs)",
-  inventory: "inventory",
-  viewInventory: "viewInventory",
-  ViewWorker: "viewWorker",
-  finances: "finances",
-  addFinances: "addFinances",
+  home: "Tabs",
+  inventory: "Inventory",
+  viewInventory: "ViewInventory",
+  ViewWorker: "ViewWorker",
+  finances: "Finances",
+  addFinances: "AddFinances",
   auth: {
-    login: "login",
-    loginasfarmer: "loginasfarmer",
-    signup: "signup"
+    login: "Login",
+    loginasfarmer: "LoginAsFarmer",
+    signup: "Signup"
   },
-  workers: "workers",
-  reports: "reports",
-  setting: "settings",
-  onboarding: "onboarding",
-  tabs: "tabs",
-  profile: "profile",
-  register: "register",
-  signupfarmer: "signupfarmer",
+  workers: "Workers",
+  reports: "Reports",
+  setting: "Settings",
+  onboarding: "Onboarding",
+  tabs: "Tabs",
+  profile: "Profile",
+  register: "Register",
+  signupfarmer: "SignupFarmer",
 }
 
 export default paths;

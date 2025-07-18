@@ -117,7 +117,6 @@ export default function HomePage() {
           <Card title='Workers' value={orgWorkers} icon={require("../../assets/images/farmer.jpeg")} />
           <Card title='Inventory' value={orgWorkers} icon={require("../../assets/images/inventory.jpeg")} />
           <Card title='Income' value={orgWorkers} icon={require("../../assets/images/sales.jpeg")} />
-
         </View>
       </View>
       {/* Recent Transactions */}

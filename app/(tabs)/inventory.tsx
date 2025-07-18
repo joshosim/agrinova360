@@ -1,7 +1,6 @@
 import { AppText } from '@/components/AppText';
 import CustomBottomSheet from '@/components/BottomSheet';
 import { AppBar } from '@/components/ui/AppBar';
-import CameraScreen from '@/components/ui/CameraScreen';
 import UnitDropdown from '@/components/UnitDropdown';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -9,15 +8,19 @@ import { fetchUserThatUploadedInventory } from '@/utils/helpers';
 import paths from '@/utils/paths';
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  Button,
   FlatList,
+  Image,
+  Linking,
   StyleSheet,
   TextInput,
   TouchableOpacity,
   View
 } from 'react-native';
+import { Camera, useCameraDevice } from 'react-native-vision-camera';
 
 export type RootStackParamList = {
   Home: undefined;
@@ -25,6 +28,86 @@ export type RootStackParamList = {
 };
 
 const Inventory = () => {
+
+  const [cameraPermission, setCameraPermission] = useState<any>(null)
+  const device = useCameraDevice('back');
+  const camera = useRef<Camera>(null);
+  const [capturePhoto, setCapturePhoto] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+
+  const checkCameraPermission = async () => {
+    const status = await Camera.getCameraPermissionStatus()
+    console.log("STATUS", status);
+
+    if (status === 'granted') {
+      setCameraPermission(true)
+    } else if (status === 'not-determined') {
+      const permission = await Camera.requestCameraPermission()
+      setCameraPermission(permission === 'granted')
+    } else {
+      setCameraPermission(false);
+      Alert.alert(
+        'You need to allow microphone permission.',
+        'Please go to Settings and allow microphone permission',
+        [
+          {
+            text: 'Open Settings',
+
+            onPress: Linking.openSettings,
+          },
+        ],
+      );
+    }
+    console.log('PERMISSION', cameraPermission);
+  }
+
+  useEffect(() => {
+    checkCameraPermission();
+  }, []);
+
+  if (cameraPermission === null) {
+    return <AppText>Checking camera permission...</AppText>
+  } else if (!cameraPermission) {
+    return <AppText>Camera permission denied. Please enable it in settings.</AppText>;
+  }
+
+  if (!device) {
+    return <AppText>No Camera Device Available</AppText>
+  }
+
+  const takePhoto = async () => {
+    try {
+      if (!camera.current) {
+        console.error("Camera reference is null", camera);
+        return;
+      }
+      const photo = await camera.current.takePhoto();
+      console.log("Photo taken:", photo);
+
+      if (photo) {
+        setCapturePhoto(`file://${photo.path}`);
+        setShowPreview(true);
+      } else {
+        console.error('Photo capture is undefined or empty.');
+      }
+    } catch (error) {
+      console.error('Error taking photo:', error);
+    }
+  }
+
+  const confirmPhoto = async () => {
+    console.log("Photo confirmed:", capturePhoto);
+    setShowPreview(false)
+  }
+
+  const retakePhoto = () => {
+    setCapturePhoto(null);
+    setShowPreview(false);
+  }
+
+  const onCameraReady = (ref: any) => {
+    camera.current = ref;
+  }
 
   const [inventoryItems, setInventoryItems] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -102,7 +185,8 @@ const Inventory = () => {
           name='add-circle'
           size={28}
           color="black"
-          onPress={() => setBottomSheetVisible(true)} />} />
+          onPress={() =>
+            setBottomSheetVisible(true)} />} />
       <FlatList
         data={inventoryItems}
         keyExtractor={(item) => item.id}
@@ -125,8 +209,33 @@ const Inventory = () => {
         }}
       />
 
-      <CameraScreen />
+      {showPreview && (
+        <Camera
+          style={{ flex: 1 }}
+          device={device}
+          isActive={true}
+          ref={camera}
+          photo
+          onInitialized={() => console.log("Camera ready")}
+        />
+      )}
+      {showPreview && capturePhoto ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Image
+            source={{ uri: capturePhoto }} // Assuming the photo is a valid URI
+            style={{ width: 300, height: 300, marginBottom: 20 }}
+          />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Button title="Retake" onPress={retakePhoto} />
+            <Button title="Confirm" onPress={confirmPhoto} />
+          </View>
+        </View>
+      ) : (
+        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
+          <Button title="Take Photo" onPress={takePhoto} />
+        </View>
 
+      )}
       {/* Custom Bottom Sheet */}
       <CustomBottomSheet
         visible={bottomSheetVisible}

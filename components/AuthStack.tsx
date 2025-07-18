@@ -1,5 +1,5 @@
-import Register from '@/app';
-import AuthLogin from '@/app/login';
+import Register from '@/app/Index';
+import AuthLogin from '@/app/Login';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 const Stack = createNativeStackNavigator();

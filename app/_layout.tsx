@@ -1,14 +1,29 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-
 import { AuthProvider } from '@/context/AuthContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { supabase } from '@/lib/supabase';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useFonts } from 'expo-font';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Platform, StatusBar, StyleSheet, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import 'react-native-reanimated';
+import TabLayout from './(tabs)/_layout';
+import HomePage from './(tabs)/home';
+import Inventory from './(tabs)/inventory';
+import Workers from './(tabs)/workers';
+import Finances from './Finances';
+import AuthLogin from './Login';
+import AuthLoginAsFarmer from './LoginAsFarmer';
+import NotFoundScreen from './NotFound';
+import Onboarding from './Onboarding';
+import Profile from './Profile';
+import type { Routes } from './Routes';
+import Settings from './Settings';
+import AuthSignup from './Signup';
+import FarmerSignup from './SignupFarmer';
+
+const Stack = createNativeStackNavigator<Routes>();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -18,16 +33,16 @@ export default function RootLayout() {
     SoraThin: require('../assets/fonts/Sora-Thin.ttf')
   });
 
-  const [initialRoute, setInitialRoute] = useState<string | null>(null);
+  const [initialRoute, setInitialRoute] = useState<string>();
 
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
 
       if (session?.user) {
-        setInitialRoute('(tabs)'); // your main home screen
+        setInitialRoute('Tabs'); // your main home screen
       } else {
-        setInitialRoute('onboarding'); // or 'login' if onboarding isn't needed
+        setInitialRoute('Onboarding'); // or 'login' if onboarding isn't needed
       }
     };
 
@@ -42,26 +57,44 @@ export default function RootLayout() {
     );
   }
 
+  console.log('initia', initialRoute)
+
   return (
-    <AuthProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack initialRouteName={initialRoute}>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="login" options={{ headerShown: false }} />
-          <Stack.Screen name="loginasfarmer" options={{ headerShown: false }} />
-          <Stack.Screen name="signupfarmer" options={{ headerShown: false }} />
-          <Stack.Screen name="signup" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-          <Stack.Screen name="settings" options={{ headerShown: false }} />
-          <Stack.Screen name="finances" options={{ headerShown: false }} />
-          <Stack.Screen name="viewInventory" options={{ headerShown: false }} />
-          <Stack.Screen name="viewWorker" options={{ headerShown: false }} />
-          <Stack.Screen name="profile" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </AuthProvider>
+    <GestureHandlerRootView style={styles.root}>
+      <AuthProvider>
+        <StatusBar barStyle={Platform.OS === 'ios' ? 'light-content' : 'dark-content'} />
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <Stack.Navigator
+            screenOptions={{
+              headerShown: false,
+              statusBarStyle: 'light',
+              animationTypeForReplace: 'push',
+            }}
+            initialRouteName={"Tabs"}>
+            {/* initialRouteName={initialRoute as any}> */}
+            <Stack.Screen name="Index" component={HomePage} />
+            <Stack.Screen name="Login" component={AuthLogin} />
+            <Stack.Screen name="LoginAsFarmer" component={AuthLoginAsFarmer} />
+            <Stack.Screen name="SignupFarmer" component={FarmerSignup} />
+            <Stack.Screen name="Signup" component={AuthSignup} />
+            <Stack.Screen name="Tabs" component={TabLayout} />
+            <Stack.Screen name="Onboarding" component={Onboarding} />
+            <Stack.Screen name="Settings" component={Settings} />
+            <Stack.Screen name="Finances" component={Finances} />
+            <Stack.Screen name="ViewInventory" component={Inventory} />
+            <Stack.Screen name="ViewWorker" component={Workers} />
+            <Stack.Screen name="Profile" component={Profile} />
+            <Stack.Screen name="NotFound" component={NotFoundScreen} />
+          </Stack.Navigator>
+        </ThemeProvider>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+})
+

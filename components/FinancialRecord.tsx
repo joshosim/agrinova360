@@ -1,96 +1,57 @@
-import React, { FC, useMemo } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
-import { Row, Table } from "react-native-table-component";
+import React from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { DataTable } from 'react-native-paper';
+import { AppText } from './AppText';
 
-export interface FinancialRecordTableProps {
-  /** Optional 2‑D array of cell strings. If omitted, a 30 × 9 demo grid is generated. */
-  rows?: string[][];
-  /** Column headers (length must match `widthArr`). */
-  tableHead?: string[];
-  /** Width for each column (same length as `tableHead`). */
-  widthArr?: number[];
-}
+type FinancialRecord = {
+  item: string;
+  amount: number;
+  date: string;
+};
 
-const DEFAULT_HEAD = [
-  "Head1",
-  "Head2",
-  "Head3",
-  "Head4",
-  "Head5",
-  "Head6",
-  "Head7",
-  "Head8",
-  "Head9",
+const financialData: FinancialRecord[] = [
+  { item: 'Fertilizer Purchase', amount: 25000, date: '2025-07-01' },
+  { item: 'Seed Sales', amount: 45000, date: '2025-07-05' },
+  { item: 'Labor Payment', amount: 15000, date: '2025-07-10' },
+  { item: 'Equipment Maintenance', amount: 10000, date: '2025-07-15' },
 ];
 
-const DEFAULT_WIDTHS = [40, 60, 80, 100, 120, 140, 160, 180, 200];
-
-const FinancialRecordTable: FC<FinancialRecordTableProps> = ({
-  rows,
-  tableHead = DEFAULT_HEAD,
-  widthArr = DEFAULT_WIDTHS,
-}) => {
-  // Build demo data only when `rows` isn't provided
-  const tableData = useMemo<string[][]>(() => {
-    if (rows) return rows;
-    const data: string[][] = [];
-    for (let i = 0; i < 30; i += 1) {
-      const row: string[] = [];
-      for (let j = 0; j < 9; j += 1) {
-        row.push(`${i}${j}`);
-      }
-      data.push(row);
-    }
-    return data;
-  }, [rows]);
-
+const FinancialRecordTable = () => {
   return (
-    <View style={styles.container}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View>
-          <Table borderStyle={styles.border}>
-            <Row
-              data={tableHead}
-              widthArr={widthArr}
-              style={styles.header}
-              textStyle={styles.text}
-            />
-          </Table>
-          <ScrollView style={styles.dataWrapper} showsVerticalScrollIndicator={false}>
-            <Table borderStyle={styles.border}>
-              {tableData.map((rowData, index) => (
-                <Row
-                  key={`row-${index}`}
-                  data={rowData}
-                  widthArr={widthArr}
-                  style={[
-                    styles.row,
-                    index % 2 !== 0 && styles.altRow,
-                  ]}
-                  textStyle={styles.text}
-                />
-              ))}
-            </Table>
-          </ScrollView>
-        </View>
+    <View style={styles.wrapper}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+        <DataTable style={styles.container}>
+          <DataTable.Header style={styles.tableHeader}>
+            <DataTable.Title><AppText>Item</AppText></DataTable.Title>
+            <DataTable.Title numeric><AppText>Amount (₦)</AppText></DataTable.Title>
+            <DataTable.Title><AppText></AppText></DataTable.Title>
+            <DataTable.Title><AppText>Date</AppText></DataTable.Title>
+          </DataTable.Header>
+
+          {financialData.map((record, index) => (
+            <DataTable.Row key={index}>
+              <DataTable.Cell><AppText>{record.item}</AppText></DataTable.Cell>
+              <DataTable.Cell numeric><AppText>{record.amount.toLocaleString()}</AppText></DataTable.Cell>
+              <DataTable.Cell ><AppText></AppText></DataTable.Cell>
+              <DataTable.Cell><AppText>{record.date}</AppText></DataTable.Cell>
+            </DataTable.Row>
+          ))}
+        </DataTable>
       </ScrollView>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    paddingTop: 30,
-    backgroundColor: "blue",
-  },
-  border: { borderWidth: 1, borderColor: "#C1C0B9" },
-  header: { height: 50, backgroundColor: "#537791", color: 'black' },
-  text: { textAlign: "center", fontWeight: "100" },
-  dataWrapper: { marginTop: -1 },
-  row: { height: 40, backgroundColor: "#E7E6E1" },
-  altRow: { backgroundColor: "#F7F6E7" },
-});
-
 export default FinancialRecordTable;
+
+const styles = StyleSheet.create({
+  wrapper: {
+    padding: 15,
+  },
+  container: {
+    minWidth: 600, // ensures the table will be scrollable if smaller screen
+  },
+  tableHeader: {
+    backgroundColor: '#f0f0f0',
+  },
+});
