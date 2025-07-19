@@ -88,6 +88,7 @@ const Reports = () => {
           }} onPress={() => changeStateOfReport(0)}>
             <AppText>Financial </AppText>
           </TouchableOpacity>
+
           <TouchableOpacity style={{
             borderBottomWidth: stateOfReport === 1 ? 2 : 0,
             borderBottomColor: 'black',

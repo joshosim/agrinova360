@@ -34,85 +34,13 @@ const Inventory = () => {
   const camera = useRef<Camera>(null);
   const [capturePhoto, setCapturePhoto] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
-
-  const checkCameraPermission = async () => {
-    const status = await Camera.getCameraPermissionStatus()
-    console.log("STATUS", status);
-
-    if (status === 'granted') {
-      setCameraPermission(true)
-    } else if (status === 'not-determined') {
-      const permission = await Camera.requestCameraPermission()
-      setCameraPermission(permission === 'granted')
-    } else {
-      setCameraPermission(false);
-      Alert.alert(
-        'You need to allow microphone permission.',
-        'Please go to Settings and allow microphone permission',
-        [
-          {
-            text: 'Open Settings',
-
-            onPress: Linking.openSettings,
-          },
-        ],
-      );
-    }
-    console.log('PERMISSION', cameraPermission);
-  }
-
-  useEffect(() => {
-    checkCameraPermission();
-  }, []);
-
-  if (cameraPermission === null) {
-    return <AppText>Checking camera permission...</AppText>
-  } else if (!cameraPermission) {
-    return <AppText>Camera permission denied. Please enable it in settings.</AppText>;
-  }
-
-  if (!device) {
-    return <AppText>No Camera Device Available</AppText>
-  }
-
-  const takePhoto = async () => {
-    try {
-      if (!camera.current) {
-        console.error("Camera reference is null", camera);
-        return;
-      }
-      const photo = await camera.current.takePhoto();
-      console.log("Photo taken:", photo);
-
-      if (photo) {
-        setCapturePhoto(`file://${photo.path}`);
-        setShowPreview(true);
-      } else {
-        console.error('Photo capture is undefined or empty.');
-      }
-    } catch (error) {
-      console.error('Error taking photo:', error);
-    }
-  }
-
-  const confirmPhoto = async () => {
-    console.log("Photo confirmed:", capturePhoto);
-    setShowPreview(false)
-  }
-
-  const retakePhoto = () => {
-    setCapturePhoto(null);
-    setShowPreview(false);
-  }
-
-  const onCameraReady = (ref: any) => {
-    camera.current = ref;
-  }
+  const [showCamera, setShowCamera] = useState(false);
 
   const [inventoryItems, setInventoryItems] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [bottomSheetVisible, setBottomSheetVisible] = useState(false);
   const [newItem, setNewItem] = useState({ item: '', quantity: '', unit: '' });
+
 
   const { user } = useAuth();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -135,10 +63,6 @@ const Inventory = () => {
 
     setLoading(false);
   };
-
-  useEffect(() => {
-    fetchInventory();
-  }, []);
 
   const handleAddItem = async () => {
     if (!newItem.item || !newItem.quantity || !newItem.unit) {
@@ -177,6 +101,97 @@ const Inventory = () => {
     setNewItem({ item: '', quantity: '', unit: '' });
   };
 
+  const checkCameraPermission = async () => {
+    const status = await Camera.getCameraPermissionStatus()
+    console.log("STATUS", status);
+
+    if (status === 'granted') {
+      setCameraPermission(true)
+    } else if (status === 'not-determined') {
+      const permission = await Camera.requestCameraPermission()
+      setCameraPermission(permission === 'granted')
+    } else {
+      setCameraPermission(false);
+      Alert.alert(
+        'You need to allow microphone permission.',
+        'Please go to Settings and allow microphone permission',
+        [
+          {
+            text: 'Cancel',
+
+            style: 'cancel',
+          },
+          {
+            text: 'Open Settings',
+
+            onPress: Linking.openSettings,
+          },
+        ],
+      );
+    }
+    console.log('PERMISSION', cameraPermission);
+  }
+
+  useEffect(() => {
+    checkCameraPermission();
+  }, []);
+
+  useEffect(() => {
+    fetchInventory();
+  }, []);
+
+  if (cameraPermission === null) {
+    return <AppText>Checking camera permission...</AppText>
+  } else if (!cameraPermission) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <AppText style={{ marginBottom: 20 }}>
+          Camera permission is denied. Please enable it in settings.
+        </AppText>
+        <Button title="Open Settings" onPress={() => Linking.openSettings()} />
+      </View>
+    );
+  }
+
+  if (!device) {
+    return <AppText>No Camera Device Available</AppText>
+  }
+
+  const takePhoto = async () => {
+    try {
+      if (!camera.current) {
+        console.error("Camera reference is null", camera);
+        return;
+      }
+      const photo = await camera.current.takePhoto();
+      console.log("Photo taken:", photo);
+
+      if (photo) {
+        setCapturePhoto(`file://${photo.path}`);
+        console.log("capturePhoto", capturePhoto)
+        setShowPreview(true);
+      } else {
+        console.error('Photo capture is undefined or empty.');
+      }
+    } catch (error) {
+      console.error('Error taking photo:', error);
+    }
+  }
+
+  const confirmPhoto = async () => {
+    console.log("Photo confirmed:", capturePhoto);
+    setShowPreview(false)
+  }
+
+  const retakePhoto = () => {
+    setCapturePhoto(null);
+    setShowPreview(false);
+  }
+
+  const onCameraReady = (ref: any) => {
+    camera.current = ref;
+  }
+
   return (
     <View style={styles.container}>
 
@@ -209,33 +224,41 @@ const Inventory = () => {
         }}
       />
 
-      {showPreview && (
+      {showCamera && device != null && (
         <Camera
           style={{ flex: 1 }}
           device={device}
           isActive={true}
-          ref={camera}
+          ref={(ref) => onCameraReady(ref)}
           photo
           onInitialized={() => console.log("Camera ready")}
         />
       )}
-      {showPreview && capturePhoto ? (
+      {!showCamera && (
+        <Button title="Open Camera" onPress={() => setShowCamera(true)} />
+      )}
+
+      {showCamera && (
+        <Button title="Close Camera" onPress={() => setShowCamera(false)} />
+      )}
+      {capturePhoto && showPreview ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Image
             source={{ uri: capturePhoto }} // Assuming the photo is a valid URI
-            style={{ width: 300, height: 300, marginBottom: 20 }}
+            style={{ width: 300, height: 150, marginBottom: 20 }}
           />
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10 }}>
             <Button title="Retake" onPress={retakePhoto} />
             <Button title="Confirm" onPress={confirmPhoto} />
           </View>
         </View>
-      ) : (
-        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
-          <Button title="Take Photo" onPress={takePhoto} />
-        </View>
-
-      )}
+      ) :
+        showCamera && (
+          <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
+            <Button title="Take Photo" onPress={takePhoto} />
+          </View>
+        )
+      }
       {/* Custom Bottom Sheet */}
       <CustomBottomSheet
         visible={bottomSheetVisible}

@@ -1,57 +1,32 @@
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { DataTable } from 'react-native-paper';
-import { AppText } from './AppText';
+import { Row, Rows, Table } from 'react-native-table-component';
 
-type FinancialRecord = {
-  item: string;
-  amount: number;
-  date: string;
-};
+const TableComponent = () => {
+  const tableHead = ['Item', 'Amount (₦)', 'Date'];
+  const tableData = [
+    ['Fertilizer Purchase', '25,000', '2025-07-01'],
+    ['Seed Sales', '45,000', '2025-07-05'],
+    ['Labor Payment', '15,000', '2025-07-10'],
+    ['Equipment Maintenance', '10,000', '2025-07-15'],
+  ];
 
-const financialData: FinancialRecord[] = [
-  { item: 'Fertilizer Purchase', amount: 25000, date: '2025-07-01' },
-  { item: 'Seed Sales', amount: 45000, date: '2025-07-05' },
-  { item: 'Labor Payment', amount: 15000, date: '2025-07-10' },
-  { item: 'Equipment Maintenance', amount: 10000, date: '2025-07-15' },
-];
-
-const FinancialRecordTable = () => {
   return (
-    <View style={styles.wrapper}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-        <DataTable style={styles.container}>
-          <DataTable.Header style={styles.tableHeader}>
-            <DataTable.Title><AppText>Item</AppText></DataTable.Title>
-            <DataTable.Title numeric><AppText>Amount (₦)</AppText></DataTable.Title>
-            <DataTable.Title><AppText></AppText></DataTable.Title>
-            <DataTable.Title><AppText>Date</AppText></DataTable.Title>
-          </DataTable.Header>
-
-          {financialData.map((record, index) => (
-            <DataTable.Row key={index}>
-              <DataTable.Cell><AppText>{record.item}</AppText></DataTable.Cell>
-              <DataTable.Cell numeric><AppText>{record.amount.toLocaleString()}</AppText></DataTable.Cell>
-              <DataTable.Cell ><AppText></AppText></DataTable.Cell>
-              <DataTable.Cell><AppText>{record.date}</AppText></DataTable.Cell>
-            </DataTable.Row>
-          ))}
-        </DataTable>
+    <View style={styles.container}>
+      <ScrollView horizontal>
+        <Table borderStyle={{ borderWidth: 1, borderColor: '#c8e1ff' }}>
+          <Row data={tableHead} style={styles.head} textStyle={styles.text} />
+          <Rows data={tableData} textStyle={styles.text} />
+        </Table>
       </ScrollView>
     </View>
   );
 };
 
-export default FinancialRecordTable;
+export default TableComponent;
 
 const styles = StyleSheet.create({
-  wrapper: {
-    padding: 15,
-  },
-  container: {
-    minWidth: 600, // ensures the table will be scrollable if smaller screen
-  },
-  tableHeader: {
-    backgroundColor: '#f0f0f0',
-  },
+  container: { padding: 16, paddingTop: 30 },
+  head: { height: 40, backgroundColor: '#f1f8ff' },
+  text: { margin: 6 },
 });
