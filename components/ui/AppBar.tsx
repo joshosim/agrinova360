@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StatusBar, StyleSheet, Text, View } from 'react-native';
 
 interface AppBarProps {
   title: string | null;
@@ -9,16 +9,19 @@ interface AppBarProps {
 
 export function AppBar({ title, onGoBack, onRight }: AppBarProps) {
   return (
-    <View style={{
-      flexDirection: 'row', alignItems: 'center',
-      justifyContent: 'space-between', marginVertical: 20
-    }}>
-      {onGoBack}
-      <Text style={{
-        textAlign: 'center', fontWeight: '400',
-        fontSize: 20, fontFamily: 'SoraBold'
-      }}>{title}</Text>
-      {onRight}
+    <View  >
+      <StatusBar barStyle={'light-content'} backgroundColor='transparent' />
+      <View style={{
+        flexDirection: 'row', alignItems: 'center',
+        justifyContent: 'space-between', marginBottom: 20
+      }}>
+        {onGoBack}
+        <Text style={{
+          textAlign: 'center', fontWeight: '400',
+          fontSize: 20, fontFamily: 'SoraBold'
+        }}>{title}</Text>
+        {onRight}
+      </View>
     </View>
   )
 }

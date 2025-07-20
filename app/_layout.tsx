@@ -18,7 +18,7 @@ import AuthLoginAsFarmer from './LoginAsFarmer';
 import NotFoundScreen from './NotFound';
 import Onboarding from './Onboarding';
 import Profile from './Profile';
-import type { Routes } from './Routes';
+import { Routes } from './Routes';
 import Settings from './Settings';
 import AuthSignup from './Signup';
 import FarmerSignup from './SignupFarmer';
@@ -40,9 +40,9 @@ export default function RootLayout() {
       const { data: { session } } = await supabase.auth.getSession();
 
       if (session?.user) {
-        setInitialRoute('Tabs'); // your main home screen
+        setInitialRoute('Tabs'); // starting
       } else {
-        setInitialRoute('Onboarding'); // or 'login' if onboarding isn't needed
+        setInitialRoute('Index'); // or 'login' if onboarding isn't needed
       }
     };
 
@@ -70,7 +70,7 @@ export default function RootLayout() {
               statusBarStyle: 'light',
               animationTypeForReplace: 'push',
             }}
-            initialRouteName={"Tabs"}>
+            initialRouteName="Login">
             {/* initialRouteName={initialRoute as any}> */}
             <Stack.Screen name="Index" component={HomePage} />
             <Stack.Screen name="Login" component={AuthLogin} />

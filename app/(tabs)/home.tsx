@@ -2,13 +2,11 @@ import { AppText } from '@/components/AppText';
 import { AppBar } from '@/components/ui/AppBar';
 import { lightGreen, mainLight } from '@/constants/Colors';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
 import { fetchOrganizationName, fetchWorkerCount } from '@/utils/helpers';
 import paths from '@/utils/paths';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DrawerActions, NavigationProp, useNavigation } from '@react-navigation/native';
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import { MaterialIcons } from '@expo/vector-icons';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
 import { Image, RootViewStyleProvider, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function HomePage() {
@@ -33,21 +31,6 @@ export default function HomePage() {
 
   const [orgName, setOrgName] = useState<string | null>(null);
   const [orgWorkers, setOrgWorkers] = useState<number | null>(null);
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerLeft: () => (
-        <TouchableOpacity
-          onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
-          style={{ marginLeft: 15 }}
-        >
-          <Ionicons name="menu" size={24} />
-        </TouchableOpacity>
-      ),
-      headerShown: true,
-      title: 'home',
-    });
-  }, [navigation]);
 
   useEffect(() => {
     const getOrganization = async () => {
@@ -82,12 +65,6 @@ export default function HomePage() {
         <AppText>{value}</AppText>
       </TouchableOpacity >)
   }
-  const logout = async () => {
-    await AsyncStorage.removeItem('user_profile');
-    await supabase.auth.signOut();
-    navigation.navigate(paths.auth.login as never)
-    console.log("user_profile removed")
-  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>

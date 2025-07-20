@@ -20,7 +20,8 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { Camera, useCameraDevice } from 'react-native-vision-camera';
+import ImageResizer from 'react-native-image-resizer';
+import { Camera, getCameraDevice } from 'react-native-vision-camera';
 
 export type RootStackParamList = {
   Home: undefined;
@@ -30,7 +31,15 @@ export type RootStackParamList = {
 const Inventory = () => {
 
   const [cameraPermission, setCameraPermission] = useState<any>(null)
-  const device = useCameraDevice('back');
+  // const device = useCameraDevice('back');
+  const devices = Camera.getAvailableCameraDevices()
+  const device = getCameraDevice(devices, 'back', {
+    physicalDevices: [
+      'ultra-wide-angle-camera',
+      'wide-angle-camera',
+      'telephoto-camera'
+    ]
+  })
   const camera = useRef<Camera>(null);
   const [capturePhoto, setCapturePhoto] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -74,13 +83,79 @@ const Inventory = () => {
       Alert.alert('Error', 'User not logged in or organization ID missing');
       return;
     }
+
+    let imageUrl = null;
+
+    if (capturePhoto) {
+
+      let resizedUri = capturePhoto;
+
+      try {
+        const resized = await ImageResizer.createResizedImage(
+          capturePhoto,
+          800, // width
+          800, // height
+          'JPEG',
+          60, // quality (0–100)
+          0 // rotation
+        );
+
+        resizedUri = resized.uri;
+        console.log('Resized image URI:', resizedUri);
+      } catch (resizeError) {
+        console.error('Image resizing failed:', resizeError);
+        Alert.alert('Error', 'Failed to resize image');
+        return;
+      }
+
+      const fileName = `inventory-${Date.now()}.jpg`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const response = await fetch(resizedUri);
+      console.log("Response from fetch:", response);
+      const blob = await response.blob();
+      console.log("Blob created:", blob);
+      console.log("Blob size:", blob.size.toPrecision(2), "Blob type:", blob.type);
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('inventory-images')
+        .upload(filePath, blob, {
+          contentType: 'image/jpeg',
+          upsert: true,
+        });
+      console.log("Upload data:", uploadData);
+      console.log("Upload error:", uploadError);
+
+      if (uploadError) {
+        console.error('Error uploading image:', uploadError.message);
+        Alert.alert('Error', 'Failed to upload image');
+        return;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from('inventory-images')
+        .getPublicUrl(uploadData.path);
+
+      imageUrl = publicUrlData.publicUrl;
+      console.log("Public URL:", imageUrl);
+    }
+
     console.log("User context:", user);
+    console.log("New item payload:", {
+      name: newItem.item,
+      quantity: parseInt(newItem.quantity),
+      unit: newItem.unit,
+      organization_id: user.organization_id,
+      created_by: user.id,
+      image: imageUrl || null,
+    });
     const payload = {
       name: newItem.item,
       quantity: parseInt(newItem.quantity),
       unit: newItem.unit,
       organization_id: user.organization_id,
       created_by: user.id,
+      image: imageUrl || null,
     };
 
     const { data, error } = await supabase.from('inventory').insert([payload]).single();
@@ -92,6 +167,7 @@ const Inventory = () => {
       setInventoryItems([data, ...inventoryItems]);
       setNewItem({ item: '', quantity: '', unit: '' });
       setBottomSheetVisible(false);
+      setCapturePhoto(null);
       Alert.alert('Success', 'Inventory item added');
     }
   };
@@ -99,6 +175,7 @@ const Inventory = () => {
   const handleBottomSheetClose = () => {
     setBottomSheetVisible(false);
     setNewItem({ item: '', quantity: '', unit: '' });
+    setCapturePhoto(null)
   };
 
   const checkCameraPermission = async () => {
@@ -170,6 +247,7 @@ const Inventory = () => {
         setCapturePhoto(`file://${photo.path}`);
         console.log("capturePhoto", capturePhoto)
         setShowPreview(true);
+        setShowCamera(false); // Hide camera after taking photo
       } else {
         console.error('Photo capture is undefined or empty.');
       }
@@ -181,6 +259,8 @@ const Inventory = () => {
   const confirmPhoto = async () => {
     console.log("Photo confirmed:", capturePhoto);
     setShowPreview(false)
+    setShowCamera(false); //hide the camera after confirming photo
+    setBottomSheetVisible(true)
   }
 
   const retakePhoto = () => {
@@ -190,6 +270,7 @@ const Inventory = () => {
 
   const onCameraReady = (ref: any) => {
     camera.current = ref;
+    setBottomSheetVisible(false)
   }
 
   return (
@@ -216,7 +297,9 @@ const Inventory = () => {
               style={styles.card}
             >
               <AppText style={styles.item}>{item.name}</AppText>
-              {/* <AppText style={styles.item}>{fetchUserThatUploadedInventory(item.created_by)}</AppText> */}
+              <Image
+                source={{ uri: item.image }}
+                style={{ width: "auto", height: 50, borderRadius: 10 }} />
               <AppText style={styles.quantity}>{item.quantity} {item.unit}</AppText>
               <AppText style={styles.quantity}>By ...</AppText>
             </TouchableOpacity>
@@ -225,38 +308,48 @@ const Inventory = () => {
       />
 
       {showCamera && device != null && (
-        <Camera
-          style={{ flex: 1 }}
-          device={device}
-          isActive={true}
-          ref={(ref) => onCameraReady(ref)}
-          photo
-          onInitialized={() => console.log("Camera ready")}
-        />
-      )}
-      {!showCamera && (
-        <Button title="Open Camera" onPress={() => setShowCamera(true)} />
-      )}
+        <View style={StyleSheet.absoluteFill}>
+          <Camera
+            style={StyleSheet.absoluteFill}
+            device={device}
+            isActive={true}
+            ref={(ref) => onCameraReady(ref)}
+            photo
+          />
 
-      {showCamera && (
-        <Button title="Close Camera" onPress={() => setShowCamera(false)} />
+          {/* Middle Capture Button */}
+          <View style={styles.captureButtonContainer}>
+            <TouchableOpacity onPress={takePhoto} style={styles.captureButton} />
+          </View>
+
+          {/* Close Camera Button (optional) */}
+          <TouchableOpacity onPress={() => setShowCamera(false)} style={styles.closeButton}>
+            <Ionicons name="close" size={28} color="#fff" />
+          </TouchableOpacity>
+        </View>
       )}
       {capturePhoto && showPreview ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Image
-            source={{ uri: capturePhoto }} // Assuming the photo is a valid URI
-            style={{ width: 300, height: 150, marginBottom: 20 }}
+            source={{ uri: capturePhoto }}
+            style={StyleSheet.absoluteFill}
+            resizeMode="cover"
           />
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10 }}>
-            <Button title="Retake" onPress={retakePhoto} />
-            <Button title="Confirm" onPress={confirmPhoto} />
+          <View style={styles.previewButtonContainer}>
+            <TouchableOpacity onPress={retakePhoto} style={[styles.reButton, { backgroundColor: 'crimson' }]}>
+              <Ionicons name="repeat" size={28} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={confirmPhoto} style={[styles.reButton, { backgroundColor: 'seagreen' }]}>
+              <Ionicons name="checkmark" size={28} color="#fff" />
+            </TouchableOpacity>
           </View>
         </View>
       ) :
         showCamera && (
-          <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
-            <Button title="Take Photo" onPress={takePhoto} />
-          </View>
+          // <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
+          //   <Button title="Take Photo" onPress={takePhoto} />
+          // </View>
+          <View />
         )
       }
       {/* Custom Bottom Sheet */}
@@ -268,13 +361,30 @@ const Inventory = () => {
         <View style={styles.bottomSheetContent}>
           <AppText style={styles.bottomSheetTitle}>Add New Inventory Item</AppText>
 
+          {/* take a picture of the inventory item */}
+          <View style={styles.formGroup}>
+            <AppText style={styles.label}>Take a Photo</AppText>
+            {!capturePhoto && (<TouchableOpacity
+              style={styles.takeThePhoto}
+              onPress={() => setShowCamera(true)}
+            >
+              <Ionicons size={28} name="camera" color='#fff' />
+            </TouchableOpacity>)}
+            {capturePhoto && (
+              <Image
+                source={{ uri: capturePhoto }}
+                style={{ width: "auto", height: 50, borderRadius: 10 }}
+              />
+            )}
+
+          </View>
           <View style={styles.formGroup}>
             <AppText style={styles.label}>Item Name</AppText>
             <TextInput
               style={styles.input}
               value={newItem.item}
               onChangeText={(text) => setNewItem({ ...newItem, item: text })}
-              placeholder="Enter item name"
+              placeholder="Enter Item"
             />
           </View>
 
@@ -323,6 +433,44 @@ const Inventory = () => {
 export default Inventory;
 
 const styles = StyleSheet.create({
+  captureButtonContainer: {
+    position: 'absolute',
+    bottom: 40,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  captureButton: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: 'white',
+    borderWidth: 4,
+    borderColor: 'gray',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 20,
+    padding: 6,
+  },
+  reButton: {
+
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 20,
+    padding: 6,
+  },
+  previewButtonContainer: {
+    position: 'absolute',
+    bottom: 40,
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: 30,
+    alignItems: 'center',
+  },
   container: {
     flex: 1,
     padding: 20,
@@ -357,9 +505,9 @@ const styles = StyleSheet.create({
   },
   bottomSheetTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
     marginBottom: 20,
-    textAlign: 'center'
+    textAlign: 'center',
+    fontFamily: 'SoraBold'
   },
   formGroup: {
     marginBottom: 15
@@ -384,7 +532,6 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20
   },
   addButton: {
     backgroundColor: '#4CAF50',
@@ -396,7 +543,6 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: 'white',
     textAlign: 'center',
-    fontWeight: 'bold'
   },
   cancelButton: {
     backgroundColor: '#f2f2f2',
@@ -408,6 +554,12 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     color: '#555',
     textAlign: 'center',
-    fontWeight: 'bold'
+  },
+  takeThePhoto: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#4CAF50',
+    borderRadius: 8,
+    padding: 10,
   }
 });

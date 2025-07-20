@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'SoraBold',
     marginBottom: 15,
     textAlign: 'center',
   },

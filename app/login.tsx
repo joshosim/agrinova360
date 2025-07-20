@@ -33,6 +33,10 @@ export default function AuthLogin() {
   };
   const { user } = useAuth()
 
+  // if (user) {
+  //   navigation.navigate(paths.home as never);
+  // }
+
   console.log("logged-out-user", user)
 
   return (

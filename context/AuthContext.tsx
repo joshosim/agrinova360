@@ -195,6 +195,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     await AsyncStorage.removeItem('user_profile');
     await supabase.auth.signOut();
+    console.log(paths.auth.login)
     navigation.navigate(paths.auth.login as never)
     console.log("user_profile removed", user)
     setUser(null);
