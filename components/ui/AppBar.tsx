@@ -9,7 +9,7 @@ interface AppBarProps {
 
 export function AppBar({ title, onGoBack, onRight }: AppBarProps) {
   return (
-    <View  >
+    <View style={{ marginTop: 20 }}>
       <StatusBar barStyle={'light-content'} backgroundColor='transparent' />
       <View style={{
         flexDirection: 'row', alignItems: 'center',

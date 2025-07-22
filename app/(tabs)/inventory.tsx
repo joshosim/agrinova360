@@ -4,7 +4,7 @@ import { AppBar } from '@/components/ui/AppBar';
 import UnitDropdown from '@/components/UnitDropdown';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { fetchUserThatUploadedInventory } from '@/utils/helpers';
+import { fetchUserThatUploadedInventory, formatDateTime } from '@/utils/helpers';
 import paths from '@/utils/paths';
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
@@ -15,11 +15,14 @@ import {
   FlatList,
   Image,
   Linking,
+  Platform,
+  StatusBar,
   StyleSheet,
   TextInput,
   TouchableOpacity,
   View
 } from 'react-native';
+import RNFS from 'react-native-fs';
 import ImageResizer from 'react-native-image-resizer';
 import { Camera, getCameraDevice } from 'react-native-vision-camera';
 
@@ -31,6 +34,7 @@ export type RootStackParamList = {
 const Inventory = () => {
 
   const [cameraPermission, setCameraPermission] = useState<any>(null)
+  const [name, setName] = useState<string>('');
   // const device = useCameraDevice('back');
   const devices = Camera.getAvailableCameraDevices()
   const device = getCameraDevice(devices, 'back', {
@@ -50,7 +54,6 @@ const Inventory = () => {
   const [bottomSheetVisible, setBottomSheetVisible] = useState(false);
   const [newItem, setNewItem] = useState({ item: '', quantity: '', unit: '' });
 
-
   const { user } = useAuth();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
@@ -67,11 +70,37 @@ const Inventory = () => {
       console.error('Error fetching inventory:', error.message);
       Alert.alert('Error', 'Failed to load inventory');
     } else {
-      setInventoryItems(data || []);
+      // setInventoryItems(data || []);
+      setInventoryItems((data || []).filter(item => item !== null && item.id));
+      console.log("Fetched inventory items:", data[0]);
     }
 
     setLoading(false);
   };
+
+  const [uploaderMap, setUploaderMap] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
+    const fetchUploaderNames = async () => {
+      const newMap: { [key: string]: string } = {};
+
+      for (const item of inventoryItems) {
+        if (item.created_by && !uploaderMap[item.created_by]) {
+          try {
+            const fullname = await fetchUserThatUploadedInventory(item.created_by);
+            newMap[item.created_by] = fullname;
+          } catch (error) {
+            console.error("Error fetching uploader name:", error);
+          }
+        }
+      }
+
+      setUploaderMap(prev => ({ ...prev, ...newMap }));
+    };
+
+    fetchUploaderNames();
+  }, [inventoryItems]);
+
 
   const handleAddItem = async () => {
     if (!newItem.item || !newItem.quantity || !newItem.unit) {
@@ -108,21 +137,22 @@ const Inventory = () => {
         return;
       }
 
+      const base64Image = await RNFS.readFile(resizedUri, 'base64');
+      const byteArray = Uint8Array.from(atob(base64Image), c => c.charCodeAt(0));
+
+      console.log('Size of resized image:', resizedUri.length, 'bytes');
+      console.log('Byte array length:', byteArray.length);
+
       const fileName = `inventory-${Date.now()}.jpg`;
       const filePath = `${user.id}/${fileName}`;
 
-      const response = await fetch(resizedUri);
-      console.log("Response from fetch:", response);
-      const blob = await response.blob();
-      console.log("Blob created:", blob);
-      console.log("Blob size:", blob.size.toPrecision(2), "Blob type:", blob.type);
-
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('inventory-images')
-        .upload(filePath, blob, {
+        .upload(filePath, byteArray, {
           contentType: 'image/jpeg',
           upsert: true,
         });
+
       console.log("Upload data:", uploadData);
       console.log("Upload error:", uploadError);
 
@@ -275,7 +305,7 @@ const Inventory = () => {
 
   return (
     <View style={styles.container}>
-
+      <StatusBar barStyle={Platform.OS === 'ios' ? "light-content" : "dark-content"} />
       <AppBar title='Inventory'
         onRight={<Ionicons
           name='add-circle'
@@ -285,10 +315,10 @@ const Inventory = () => {
             setBottomSheetVisible(true)} />} />
       <FlatList
         data={inventoryItems}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => item?.id?.toString() || index.toString()}
         renderItem={({ item }) => {
-          console.log("make i check", fetchUserThatUploadedInventory(item.created_by))
-          console.log("makcre", item.created_by)
+          const uploaderName = uploaderMap[item?.created_by] || "Unknown";
+
           return (
             <TouchableOpacity
               onPress={() => navigation.navigate(
@@ -296,16 +326,25 @@ const Inventory = () => {
               )}
               style={styles.card}
             >
-              <AppText style={styles.item}>{item.name}</AppText>
-              <Image
-                source={{ uri: item.image }}
-                style={{ width: "auto", height: 50, borderRadius: 10 }} />
-              <AppText style={styles.quantity}>{item.quantity} {item.unit}</AppText>
-              <AppText style={styles.quantity}>By ...</AppText>
+              <View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <AppText style={[styles.item, { textTransform: 'uppercase' }]}>{item?.name}</AppText>
+                  <AppText style={[styles.item, { fontSize: 12 }]}>{formatDateTime(item?.created_at)}</AppText>
+                </View>
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <View>
+                    <AppText style={styles.quantity}>{item?.quantity} {item?.unit}</AppText>
+                    <AppText style={styles.quantity}>By {uploaderName}</AppText>
+                  </View>
+                  <Image source={{ uri: item?.image }} style={{ width: 50, height: 50, borderRadius: 10 }} />
+                </View>
+              </View>
             </TouchableOpacity>
-          )
+          );
         }}
       />
+
 
       {showCamera && device != null && (
         <View style={StyleSheet.absoluteFill}>
@@ -329,7 +368,10 @@ const Inventory = () => {
         </View>
       )}
       {capturePhoto && showPreview ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{
+          flex: 1, justifyContent: 'center', alignItems: 'center',
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0
+        }}>
           <Image
             source={{ uri: capturePhoto }}
             style={StyleSheet.absoluteFill}

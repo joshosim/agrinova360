@@ -23,6 +23,7 @@ type AuthContextType = {
   logout: () => Promise<void>;
   signupAsManager: (email: string, password: string, fullname: string, orgName: string, phone: string, farmAddress: string) => Promise<void>;
   signupAsFarmer: (email: string, password: string, fullname: string, farmCode: string, phone: string) => Promise<void>;
+  setUser: (user: User | null) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -202,7 +203,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signupAsFarmer, signupAsManager, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, signupAsFarmer, signupAsManager, login, logout, setUser }}>
       {children}
     </AuthContext.Provider>
   );

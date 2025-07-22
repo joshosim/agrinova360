@@ -1,10 +1,8 @@
 import { AuthProvider } from '@/context/AuthContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { supabase } from '@/lib/supabase';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useFonts } from 'expo-font';
-import { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, StatusBar, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
@@ -33,23 +31,8 @@ export default function RootLayout() {
     SoraThin: require('../assets/fonts/Sora-Thin.ttf')
   });
 
-  const [initialRoute, setInitialRoute] = useState<string>();
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (session?.user) {
-        setInitialRoute('Tabs'); // starting
-      } else {
-        setInitialRoute('Index'); // or 'login' if onboarding isn't needed
-      }
-    };
-
-    checkAuth();
-  }, []);
-
-  if (!loaded || initialRoute === null) {
+  if (!loaded === null) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" />
@@ -57,7 +40,6 @@ export default function RootLayout() {
     );
   }
 
-  console.log('initia', initialRoute)
 
   return (
     <GestureHandlerRootView style={styles.root}>

@@ -41,12 +41,47 @@ export const fetchOrganizationName = async (organizationId: string) => {
 
 export const fetchUserThatUploadedInventory = async (created_by: string) => {
   const { data, error } = await supabase
-    .from('inventory')
+    .from('profiles')
     .select('fullname')
     .eq('id', created_by)
     .single();
 
   if (error) throw error;
-  return data.fullname
+  return data.fullname;
+};
 
-}
+
+export const formatDateTime = (isoString: string): string => {
+  const date = new Date(isoString);
+
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+  const year = String(date.getFullYear()).slice(2); // Last two digits of year
+
+  return `${day}/${month}/${year}`;
+};
+
+export const fetchInventoryLength = async () => {
+  const { count, error } = await supabase
+    .from('inventory')
+    .select('*', { count: 'exact', head: true });
+
+  if (error) throw error;
+  return count || 0;
+};
+
+// export const formatDateTime = (isoString: string): string => {
+//   const date = new Date(isoString);
+
+//   const day = String(date.getDate()).padStart(2, '0');
+//   const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+//   const year = String(date.getFullYear()).slice(2); // Last two digits of year
+
+//   let hours = date.getHours();
+//   const minutes = String(date.getMinutes()).padStart(2, '0');
+//   const ampm = hours >= 12 ? 'PM' : 'AM';
+
+//   hours = hours % 12 || 12; // Convert to 12-hour format
+
+//   return `${day}/${month}/${year} \n ${hours}:${minutes} ${ampm}`;
+// };

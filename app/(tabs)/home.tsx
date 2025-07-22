@@ -2,7 +2,7 @@ import { AppText } from '@/components/AppText';
 import { AppBar } from '@/components/ui/AppBar';
 import { lightGreen, mainLight } from '@/constants/Colors';
 import { useAuth } from '@/context/AuthContext';
-import { fetchOrganizationName, fetchWorkerCount } from '@/utils/helpers';
+import { fetchInventoryLength, fetchOrganizationName, fetchWorkerCount } from '@/utils/helpers';
 import paths from '@/utils/paths';
 import { MaterialIcons } from '@expo/vector-icons';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
@@ -22,6 +22,21 @@ export default function HomePage() {
     { id: '2', item: "Eggs", quantity: 120 },
     { id: '3', item: "Vaccines", quantity: 10 },
   ];
+
+  const [inventoryCount, setInventoryCount] = useState<number>(0);
+
+  useEffect(() => {
+    const getCount = async () => {
+      try {
+        const count = await fetchInventoryLength();
+        setInventoryCount(count);
+      } catch (error) {
+        console.error("Error fetching inventory count:", error);
+      }
+    };
+
+    getCount();
+  }, []);
 
   const navigation = useNavigation<NavigationProp<RootViewStyleProvider>>();
 
@@ -92,7 +107,7 @@ export default function HomePage() {
         <AppText style={styles.sectionTitle}>Track Summary</AppText>
         <View style={styles.dashboardRow}>
           <Card title='Workers' value={orgWorkers} icon={require("../../assets/images/farmer.jpeg")} />
-          <Card title='Inventory' value={orgWorkers} icon={require("../../assets/images/inventory.jpeg")} />
+          <Card title='Inventory' value={inventoryCount} icon={require("../../assets/images/inventory.jpeg")} />
           <Card title='Income' value={orgWorkers} icon={require("../../assets/images/sales.jpeg")} />
         </View>
       </View>

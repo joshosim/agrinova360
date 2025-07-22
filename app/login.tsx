@@ -19,7 +19,7 @@ export default function AuthLogin() {
   const goToSignup = () => {
     navigation.navigate(paths.auth.signup as never)
   }
-  const { login, loading } = useAuth(); // use the provider's login function
+  const { login, loading } = useAuth();
 
   const handleLogin = async () => {
     try {
@@ -31,13 +31,10 @@ export default function AuthLogin() {
       Alert.alert('Login Failed', error.message);
     }
   };
-  const { user } = useAuth()
-
-  // if (user) {
-  //   navigation.navigate(paths.home as never);
-  // }
+  const { user, setUser } = useAuth()
 
   console.log("logged-out-user", user)
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
