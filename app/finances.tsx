@@ -2,10 +2,11 @@ import { RootViewStyleProvider, StyleSheet, Text, TouchableOpacity, View } from 
 import React from 'react'
 import { NavigationProp, useNavigation } from '@react-navigation/native'
 import paths from '@/utils/paths';
+import { RootStackParamList } from './(tabs)/inventory';
 
 const Finances = () => {
 
-  const navigation = useNavigation<NavigationProp<RootViewStyleProvider>>();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   const goToSignup = () => {
     navigation.navigate(paths.auth.signup as never)

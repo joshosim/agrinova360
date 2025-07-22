@@ -8,13 +8,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { Alert, Platform, RootViewStyleProvider, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { RootStackParamList } from './(tabs)/inventory';
 
 export default function AuthLogin() {
   const [email, setEmail] = useState<string>("")
   const [password, setPassword] = useState<string>("")
 
-  const navigation = useNavigation<NavigationProp<RootViewStyleProvider>>();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   const goToSignup = () => {
     navigation.navigate(paths.auth.signup as never)

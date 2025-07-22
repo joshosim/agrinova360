@@ -2,9 +2,8 @@ import { AppText } from '@/components/AppText';
 import { AppBar } from '@/components/ui/AppBar';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
-import { FlatList, RootViewStyleProvider, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 
 const Workers = () => {
 
@@ -44,8 +43,6 @@ const Workers = () => {
     getWorkers()
 
   }, [user])
-
-  const navigation = useNavigation<NavigationProp<RootViewStyleProvider>>();
 
   return (
     <View style={styles.container}>

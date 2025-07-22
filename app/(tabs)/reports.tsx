@@ -3,7 +3,6 @@ import CustomBottomSheet from '@/components/BottomSheet'
 import FinancialReportTable from '@/components/FinancialRecord'
 import { AppBar } from '@/components/ui/AppBar'
 import { Ionicons } from '@expo/vector-icons'
-import { NavigationProp, useNavigation } from '@react-navigation/native'
 import React, { useState } from 'react'
 import {
   Alert,
@@ -37,8 +36,6 @@ const Reports = () => {
     summary: '',
     casualties: '',
   })
-
-  const navigation = useNavigation<NavigationProp<any>>() // You can replace `any` with a proper type if needed
 
   const handleAddReport = () => {
     if (!newReport.date || !newReport.summary || !newReport.casualties) {

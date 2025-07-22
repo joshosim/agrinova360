@@ -27,8 +27,20 @@ import ImageResizer from 'react-native-image-resizer';
 import { Camera, getCameraDevice } from 'react-native-vision-camera';
 
 export type RootStackParamList = {
-  Home: undefined;
-  ViewInventory: { item: any };
+  Home: undefined
+  Index: undefined
+  Login: undefined
+  LoginAsFarmer: undefined
+  SignupFarmer: undefined
+  Signup: undefined
+  Tabs: undefined
+  Onboarding: undefined
+  Settings: undefined
+  Finances: undefined
+  ViewInventory: undefined
+  ViewWorker: undefined
+  Profile: undefined
+  NotFound: undefined
 };
 
 const Inventory = () => {

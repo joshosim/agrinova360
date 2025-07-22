@@ -1,81 +1,134 @@
-import React from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { Alert, Animated, StyleSheet, TouchableOpacity } from 'react-native';
+import { CurvedBottomBar } from 'react-native-curved-bottom-bar';
 
-import { HapticTab } from '@/components/HapticTab';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { Ionicons } from '@expo/vector-icons';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomePage from './home';
 import Inventory from './inventory';
 import Reports from './reports';
 import Workers from './workers';
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+function TabLayout() {
 
-  const Tab = createBottomTabNavigator();
+  const _renderIcon = (routeName: string, selectedTab: string) => {
+    let icon = '';
+
+    switch (routeName) {
+      case 'home':
+        icon = 'home-outline';
+        break;
+      case 'inventory':
+        icon = 'cube-outline';
+        break;
+      case 'reports':
+        icon = 'bar-chart-outline';
+        break;
+      case 'workers':
+        icon = 'person-outline';
+        break;
+    }
+
+    return (
+      <Ionicons
+        name={icon as any}
+        size={25}
+        color={routeName === selectedTab ? 'black' : 'gray'}
+      />
+    );
+  };
+
+  const renderTabBar = ({ routeName, selectedTab, navigate }: any) => (
+    <TouchableOpacity onPress={() => navigate(routeName)} style={styles.tabbarItem}>
+      {_renderIcon(routeName, selectedTab)}
+    </TouchableOpacity>
+  );
+
+  const renderCircle = () => (
+    <Animated.View style={styles.btnCircleUp}>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => Alert.alert('Quick Action')}
+      >
+        <Ionicons name="add" color="gray" size={25} />
+      </TouchableOpacity>
+    </Animated.View>
+  )
 
   return (
-    <Tab.Navigator
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
-      }}>
-      <Tab.Screen
+
+    <CurvedBottomBar.Navigator
+      id="main-bottom-bar"
+      type="UP"
+      width={400} // Adjust based on your screen width
+      height={55}
+      circleWidth={50}
+      circlePosition="CENTER"
+      bgColor="white"
+      initialRouteName="home"
+      borderTopLeftRight
+      borderColor="#E0E0E0"
+      borderWidth={1}
+      style={styles.bottomBar}
+      renderCircle={renderCircle}
+      tabBar={renderTabBar}
+      shadowStyle={{}}
+      screenListeners={{}}
+      backBehavior="initialRoute"
+      screenOptions={{}}
+      defaultScreenOptions={{}}
+    >
+      <CurvedBottomBar.Screen
         name="home"
         component={HomePage}
-        options={{
-          title: 'Home',
-          tabBarLabelStyle: styles.tabLabel,
-          tabBarIcon: ({ color }) => <Ionicons size={28} name="home" color={color} />,
-
-        }}
+        position="LEFT"
       />
-      <Tab.Screen
+      <CurvedBottomBar.Screen
         name="inventory"
         component={Inventory}
-        options={{
-          title: 'Inventory',
-          tabBarLabelStyle: styles.tabLabel,
-          tabBarIcon: ({ color }) => <Ionicons size={28} name="cube" color={color} />,
-        }}
+        position="LEFT"
       />
-      <Tab.Screen
+      <CurvedBottomBar.Screen
         name="reports"
         component={Reports}
-        options={{
-          title: 'Reports',
-          tabBarLabelStyle: styles.tabLabel,
-          tabBarIcon: ({ color }) => <Ionicons size={28} name="bar-chart" color={color} />,
-        }}
+        position="RIGHT"
       />
-      <Tab.Screen
+      <CurvedBottomBar.Screen
         name="workers"
         component={Workers}
-        options={{
-          title: 'Workers',
-          tabBarLabelStyle: styles.tabLabel,
-          tabBarIcon: ({ color }) => <Ionicons size={28} name="person" color={color} />,
-        }}
+        position="RIGHT"
       />
-    </Tab.Navigator>
+    </CurvedBottomBar.Navigator>
+
   );
 }
 
+export default TabLayout
+
 const styles = StyleSheet.create({
-  tabLabel: {
-    fontFamily: 'SoraRegular',
-    fontSize: 12,
+  bottomBar: {},
+  tabbarItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  button: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  btnCircleUp: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E8E8E8',
+    bottom: 30,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    elevation: 1,
   },
 });

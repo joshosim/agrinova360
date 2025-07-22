@@ -7,7 +7,8 @@ import paths from '@/utils/paths';
 import { MaterialIcons } from '@expo/vector-icons';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
-import { Image, RootViewStyleProvider, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { RootStackParamList } from './inventory';
 
 export default function HomePage() {
 
@@ -38,7 +39,7 @@ export default function HomePage() {
     getCount();
   }, []);
 
-  const navigation = useNavigation<NavigationProp<RootViewStyleProvider>>();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   const { user, loading } = useAuth();
 

@@ -7,7 +7,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { Alert, Platform, RootViewStyleProvider, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { RootStackParamList } from './(tabs)/inventory';
 
 const AuthSignup = () => {
   const [email, setEmail] = useState<string>("")
@@ -18,7 +19,7 @@ const AuthSignup = () => {
   const [farmAddress, setFarmAddress] = useState<string>("")
   const { signupAsManager, loading } = useAuth();
 
-  const navigation = useNavigation<NavigationProp<RootViewStyleProvider>>();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   const signUpTextFn = async () => {
     try {
