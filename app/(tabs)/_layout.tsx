@@ -73,13 +73,18 @@ function TabLayout() {
       shadowStyle={{}}
       screenListeners={{}}
       backBehavior="initialRoute"
-      screenOptions={{}}
-      defaultScreenOptions={{}}
+      screenOptions={{
+        headerShown: false
+      }}
+      defaultScreenOptions={{
+        headerShown: false
+      }}
     >
       <CurvedBottomBar.Screen
         name="home"
         component={HomePage}
         position="LEFT"
+
       />
       <CurvedBottomBar.Screen
         name="inventory"

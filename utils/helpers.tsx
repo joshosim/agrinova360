@@ -70,6 +70,19 @@ export const fetchInventoryLength = async () => {
   return count || 0;
 };
 
+export const fetchInventory = async (organizationId: string) => {
+  const { data, error } = await supabase
+    .from('inventory')
+    .select('*')
+    .eq('organization_id', organizationId)
+
+  if (error) {
+    console.error('Error fetching inventory:', error.message);
+    return [];
+  }
+
+  return data;
+};
 // export const formatDateTime = (isoString: string): string => {
 //   const date = new Date(isoString);
 
