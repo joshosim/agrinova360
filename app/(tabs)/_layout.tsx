@@ -54,7 +54,6 @@ function TabLayout() {
   )
 
   return (
-
     <CurvedBottomBar.Navigator
       id="main-bottom-bar"
       type="UP"
@@ -84,7 +83,6 @@ function TabLayout() {
         name="home"
         component={HomePage}
         position="LEFT"
-
       />
       <CurvedBottomBar.Screen
         name="inventory"

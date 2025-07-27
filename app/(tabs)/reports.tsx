@@ -2,6 +2,7 @@ import { AppText } from '@/components/AppText'
 import CustomBottomSheet from '@/components/BottomSheet'
 import FinancialReportTable from '@/components/FinancialRecord'
 import { AppBar } from '@/components/ui/AppBar'
+import WeatherComponent from '@/components/WeatherReport'
 import { Ionicons } from '@expo/vector-icons'
 import React, { useState } from 'react'
 import {
@@ -104,11 +105,17 @@ const Reports = () => {
       </View>
       <View>
         <View style={{ display: stateOfReport === 0 ? "flex" : "none" }}>
-          <AppText>Financial Report</AppText>
+          <AppText style={{
+            textAlign: 'center', fontSize: 20,
+            fontFamily: 'SoraBold'
+          }}>Financial Report</AppText>
           <FinancialReportTable />
-          <AppText>J</AppText>
         </View>
         <View style={{ display: stateOfReport === 1 ? "flex" : "none" }}>
+          <AppText style={{
+            textAlign: 'center', fontSize: 20,
+            fontFamily: 'SoraBold'
+          }}>Farm Report</AppText>
           <FlatList
             data={reports}
             keyExtractor={(item) => item.id}
@@ -179,7 +186,11 @@ const Reports = () => {
           </CustomBottomSheet>
         </View>
         <View style={{ display: stateOfReport === 2 ? "flex" : "none" }}>
-          <AppText>Weather Report</AppText>
+          <AppText style={{
+            textAlign: 'center', fontSize: 20,
+            fontFamily: 'SoraBold'
+          }}>Weather Report</AppText>
+          <WeatherComponent />
         </View>
       </View>
     </View>
