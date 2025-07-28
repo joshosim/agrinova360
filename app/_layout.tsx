@@ -1,10 +1,16 @@
 import { AuthProvider } from '@/context/AuthContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import {
+  QueryClient,
+  QueryClientProvider
+} from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { ActivityIndicator, Platform, StatusBar, View } from 'react-native';
 import 'react-native-reanimated';
 import Router from './routes/Router';
+
+const queryClient = new QueryClient();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -30,7 +36,9 @@ export default function RootLayout() {
     <AuthProvider>
       <StatusBar barStyle={Platform.OS === 'ios' ? 'light-content' : 'dark-content'} />
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Router />
+        <QueryClientProvider client={queryClient}>
+          <Router />
+        </QueryClientProvider>
       </ThemeProvider>
     </AuthProvider>
   );

@@ -1,6 +1,8 @@
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Text, TouchableOpacity, View } from 'react-native';
+import { AppText } from './AppText';
 
 export interface WeatherCondition {
   code: number;
@@ -87,20 +89,71 @@ const WeatherComponent = () => {
   }
   console.log(weather)
 
+  const todayDate = new Date()
+
+  const formattedDate = new Intl.DateTimeFormat('en-GB', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long'
+  }).format(todayDate);
+
+
   return (
     <View style={{ alignItems: 'center', marginTop: 20 }}>
-      <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
-        Weather in {weather.location.name}, {weather.location.country}
-      </Text>
+      <AppText style={{ fontSize: 18, fontFamily: 'SoraBold', marginBottom: 4 }}>
+        About Today
+      </AppText>
+      <TouchableOpacity style={{
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <Ionicons name='location-outline' size={20} color='black' />
+        <AppText>{weather.location.name}, {weather.location.country}</AppText>
+        <MaterialIcons name='arrow-drop-down' size={20} color='black' />
+      </TouchableOpacity>
+
       <Image
         source={{ uri: `https:${weather.current.condition.icon}` }}
-        style={{ width: 64, height: 64, marginVertical: 10 }}
+        style={{ width: 120, height: 120, marginVertical: 10 }}
       />
-      <Text>Temperature: {weather.current.temp_c}°C</Text>
-      <Text>Condition: {weather.current.condition.text}</Text>
-      <Text>Humidity: {weather.current.humidity}%</Text>
-      <Text>Wind: {weather.current.wind_kph} km/h ({weather.current.wind_dir})</Text>
-      <Text>Last Updated: {weather.current.last_updated}</Text>
+
+      <AppText> {formattedDate}</AppText>
+
+      <AppText
+        style={{ textAlign: 'center', fontSize: 30 }}>
+        {weather.current.temp_c}°C</AppText>
+
+      <View style={{
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center', gap: 20
+      }}>
+        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+          <Image
+            source={{ uri: `https:${weather.current.condition.icon}` }}
+            style={{ width: 64, height: 64, marginVertical: 10 }}
+          />
+          <AppText>{weather.current.humidity}%</AppText>
+          <AppText>{weather.current.condition.text}</AppText>
+        </View>
+        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+          <Image
+            source={{ uri: `https:${weather.current.condition.icon}` }}
+            style={{ width: 64, height: 64, marginVertical: 10 }}
+          />
+          <AppText>{weather.current.wind_kph} km/h</AppText>
+          <AppText>Wind</AppText>
+        </View>
+        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+          <Image
+            source={{ uri: `https:${weather.current.condition.icon}` }}
+            style={{ width: 64, height: 64, marginVertical: 10 }}
+          />
+          <AppText>{weather.current.humidity}%</AppText>
+          <AppText>Humidity</AppText>
+        </View>
+      </View>
     </View>
   );
 };

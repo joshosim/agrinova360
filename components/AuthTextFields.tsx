@@ -15,14 +15,19 @@ const AuthTextFields = ({ title, onChange, value, placeHolderText, keyBoardType 
   return (
     <View style={styles.container}>
       <AppText style={styles.text}>{title}</AppText>
-      <TextInput
-        placeholder={placeHolderText}
-        value={value}
-        keyboardType={keyBoardType}
-        onChangeText={onChange}
-        style={styles.textInput}
-        placeholderTextColor={"gray"}
-      />
+      <View style={{
+        borderWidth: 0.5, borderRadius: 10,
+        borderColor: '#ece7e4', borderStyle: 'solid',
+      }}>
+        <TextInput
+          placeholder={placeHolderText}
+          value={value}
+          keyboardType={keyBoardType}
+          onChangeText={onChange}
+          style={styles.textInput}
+          placeholderTextColor={"gray"}
+        />
+      </View>
     </View>
   )
 }
@@ -32,19 +37,20 @@ export default AuthTextFields
 const styles = StyleSheet.create({
   container: {
     width: "100%",
-    marginBottom: 10
+    marginBottom: 10,
+    borderWidth: 1, borderRadius: 10, borderColor: '#ece7e4',
+    borderStyle: 'solid', padding: 10
   },
   text: {
-    fontWeight: '600',
     marginBottom: 4,
-    fontSize: 12
+    fontSize: 12,
+    fontFamily: 'SoraBold'
   },
   textInput: {
-    borderBottomWidth: 2,
     paddingVertical: 12,
-    paddingHorizontal: 0,
-    borderColor: "#ece4e7",
-    fontSize: 16,
-    fontFamily: 'SpaceGrotesk'
+    paddingHorizontal: 5,
+    fontSize: 12,
+    fontFamily: 'SoraRegular',
+    borderRadius: 10
   }
 })

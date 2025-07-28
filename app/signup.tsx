@@ -34,7 +34,7 @@ const AuthSignup = () => {
 
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView style={styles.container}>
       <StatusBar style={Platform.OS === 'ios' ? "light" : "auto"} />
 
       <View>
@@ -42,7 +42,7 @@ const AuthSignup = () => {
           <Ionicons name='fast-food' size={75} color={'green'} />
         </View>
         <AppText style={{ fontWeight: 600, fontSize: 25, textAlign: 'center', marginVertical: 20 }}>Create an account🖋</AppText>
-        <AppText style={{ fontWeight: 400, fontSize: 16, textAlign: 'center', marginBottom: 40 }}>Please complete your profile to create an account with AgriNOVA360.</AppText>
+        <AppText style={{ fontWeight: 400, fontSize: 12, textAlign: 'center', marginBottom: 40 }}>Please complete your profile to create an account with AgriNOVA360.</AppText>
 
         <View style={{ width: "100%" }}>
           <AuthTextFields
@@ -100,7 +100,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
     padding: 10,
-    justifyContent: 'space-between'
+    marginBottom: 20
+    // justifyContent: 'space-between'
   },
   button: {
     backgroundColor: Colors.primary,
@@ -113,6 +114,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "white",
     fontWeight: '400',
-    fontSize: 18,
+    fontSize: 14,
   },
 })

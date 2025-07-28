@@ -58,7 +58,7 @@ const Profile = () => {
   }, [user]);
 
   return (
-    <ScrollView style={{ backgroundColor: 'white', flex: 1, padding: 15 }}>
+    <ScrollView style={{ backgroundColor: 'white', flex: 1, padding: 15, marginBottom: 20 }}>
       <AppBar title='Profile'
 
         onGoBack={<MaterialIcons
