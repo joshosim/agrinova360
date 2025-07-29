@@ -9,6 +9,19 @@ export const generateFarmCode = (): string => {
   return result;
 };
 
+export const addInventoryItem = async (payload: any) => {
+  const { data, error } = await supabase
+    .from('inventory')
+    .insert([payload])
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+};
+
 export const fetchWorkerCount = async (organizationId: string) => {
   const { count, error } = await supabase
     .from('profiles')
@@ -83,18 +96,27 @@ export const fetchInventory = async (organizationId: string) => {
 
   return data;
 };
-// export const formatDateTime = (isoString: string): string => {
-//   const date = new Date(isoString);
 
-//   const day = String(date.getDate()).padStart(2, '0');
-//   const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
-//   const year = String(date.getFullYear()).slice(2); // Last two digits of year
+export const fetchInventoryItems = async (organization_id: string) => {
+  const { data, error } = await supabase
+    .from('inventory')
+    .select('*')
+    .eq('organization_id', organization_id)
+    .order('created_at', { ascending: false });
 
-//   let hours = date.getHours();
-//   const minutes = String(date.getMinutes()).padStart(2, '0');
-//   const ampm = hours >= 12 ? 'PM' : 'AM';
+  if (error) {
+    throw new Error(error.message);
+  }
+  return data;
+};
+export const formatTime = (isoString: string): string => {
+  const date = new Date(isoString);
 
-//   hours = hours % 12 || 12; // Convert to 12-hour format
+  let hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
 
-//   return `${day}/${month}/${year} \n ${hours}:${minutes} ${ampm}`;
-// };
+  hours = hours % 12 || 12; // Convert to 12-hour format
+
+  return `${hours}:${minutes} ${ampm}`;
+};

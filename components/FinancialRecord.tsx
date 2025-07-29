@@ -1,14 +1,18 @@
+import { MaterialIcons } from '@expo/vector-icons';
 import * as React from 'react';
-import { ScrollView } from 'react-native';
-import { DataTable } from 'react-native-paper';
+import { FlatList, Modal, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { AppText } from './AppText';
+import { ThemedView } from './ThemedView';
+import { FinancialReportCard } from './ui/FinancialCard';
+
+const FILTER_OPTIONS = [
+  { key: 'today', label: 'Today' },
+  { key: 'yesterday', label: 'Yesterday' },
+  { key: 'last7days', label: 'Last 7 Days' },
+  { key: 'thisMonth', label: 'This Month' },
+];
 
 const FinancialReportTable = () => {
-  const [page, setPage] = React.useState<number>(0);
-  const [numberOfItemsPerPageList] = React.useState([2, 3, 4]);
-  const [itemsPerPage, onItemsPerPageChange] = React.useState(
-    numberOfItemsPerPageList[0]
-  );
-
   const [items] = React.useState([
     { key: 1, name: 'Sale of Eggs', amount: 45000, category: 'Income', date: '2025-07-10' },
     { key: 2, name: 'Purchase of Chicken Feed', amount: 15000, category: 'Expense', date: '2025-07-12' },
@@ -21,85 +25,84 @@ const FinancialReportTable = () => {
     { key: 9, name: 'Irrigation Pump Fuel', amount: 8000, category: 'Expense', date: '2025-07-25' },
     { key: 10, name: 'Sale of Goat Milk', amount: 35000, category: 'Income', date: '2025-07-25' },
   ]);
+  const [open, setOpen] = React.useState(false);
+  const [selectedFilter, setSelectedFilter] = React.useState(FILTER_OPTIONS[0]);
 
-  const from = page * itemsPerPage;
-  const to = Math.min((page + 3) * itemsPerPage, items.length);
-
-  React.useEffect(() => {
-    setPage(0);
-  }, [itemsPerPage]);
+  const handleSelectFilter = (filter: any) => {
+    setSelectedFilter(filter);
+    setOpen(false);
+  };
 
   return (
-    <ScrollView
-      horizontal={true}
-      showsHorizontalScrollIndicator={true}
-    >
-      <DataTable style={{}}>
-        <DataTable.Header>
-          <DataTable.Title>S/N</DataTable.Title>
-          <DataTable.Title>Title</DataTable.Title>
-          <DataTable.Title numeric>Category</DataTable.Title>
-          <DataTable.Title numeric>Amount</DataTable.Title>
-          <DataTable.Title numeric>Date</DataTable.Title>
-        </DataTable.Header>
+    <ThemedView style={{ marginBottom: 300 }}>
+      <TouchableOpacity
+        onPress={() => setOpen(true)}
+        style={styles.filterButton}>
+        <MaterialIcons name='date-range' size={18} />
+        <AppText>{selectedFilter.label}</AppText>
+      </TouchableOpacity>
 
-        {items.slice(from, to).map((item) => (
-          <DataTable.Row key={item.key}>
-            <DataTable.Cell>{item.key}</DataTable.Cell>
-            <DataTable.Cell>{item.name}</DataTable.Cell>
-            <DataTable.Cell numeric>{item.category}</DataTable.Cell>
-            <DataTable.Cell numeric>{item.amount.toLocaleString()}</DataTable.Cell>
-            <DataTable.Cell numeric>{item.date}</DataTable.Cell>
-          </DataTable.Row>
-        ))}
+      <FlatList
+        data={items}
+        keyExtractor={(item) => item.key.toString()}
+        renderItem={({ item }) => <FinancialReportCard item={item} />}
+        contentContainerStyle={{ paddingBottom: 100 }}
+      />
 
-        <DataTable.Pagination
-          page={page}
-          numberOfPages={Math.ceil(items.length / itemsPerPage)}
-          onPageChange={(page) => setPage(page)}
-          label={`${from + 1}-${to} of ${items.length}`}
-          numberOfItemsPerPageList={numberOfItemsPerPageList}
-          numberOfItemsPerPage={itemsPerPage}
-          onItemsPerPageChange={onItemsPerPageChange}
-          showFastPaginationControls
-          selectPageDropdownLabel={'Rows per page'}
-        />
-      </DataTable>
-      <DataTable style={{
-
-      }}>
-        <DataTable.Header>
-          <DataTable.Title>S/N</DataTable.Title>
-          <DataTable.Title>Title</DataTable.Title>
-          <DataTable.Title numeric>Category</DataTable.Title>
-          <DataTable.Title numeric>Amount</DataTable.Title>
-          <DataTable.Title numeric>Date</DataTable.Title>
-        </DataTable.Header>
-
-        {items.slice(from, to).map((item) => (
-          <DataTable.Row key={item.key}>
-            <DataTable.Cell>{item.key}</DataTable.Cell>
-            <DataTable.Cell>{item.name}</DataTable.Cell>
-            <DataTable.Cell numeric>{item.category}</DataTable.Cell>
-            <DataTable.Cell numeric>{item.amount.toLocaleString()}</DataTable.Cell>
-            <DataTable.Cell numeric>{item.date}</DataTable.Cell>
-          </DataTable.Row>
-        ))}
-
-        <DataTable.Pagination
-          page={page}
-          numberOfPages={Math.ceil(items.length / itemsPerPage)}
-          onPageChange={(page) => setPage(page)}
-          label={`${from + 1}-${to} of ${items.length}`}
-          numberOfItemsPerPageList={numberOfItemsPerPageList}
-          numberOfItemsPerPage={itemsPerPage}
-          onItemsPerPageChange={onItemsPerPageChange}
-          showFastPaginationControls
-          selectPageDropdownLabel={'Rows per page'}
-        />
-      </DataTable>
-    </ScrollView >
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={open}
+        onRequestClose={() => setOpen(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setOpen(false)}>
+          <View style={styles.bottomSheet}>
+            {FILTER_OPTIONS.map((filter) => (
+              <TouchableOpacity
+                key={filter.key}
+                onPress={() => handleSelectFilter(filter)}
+                style={styles.optionItem}
+              >
+                <AppText style={{ fontSize: 16 }}>{filter.label}</AppText>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
+    </ThemedView>
   );
 };
+
+const styles = StyleSheet.create({
+  filterButton: {
+    alignSelf: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 3,
+    borderRadius: 10,
+    borderWidth: 0.5,
+    borderColor: '#ece7e4',
+    padding: 5,
+    marginBottom: 10,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  bottomSheet: {
+    backgroundColor: '#fff',
+    paddingVertical: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+  },
+  optionItem: {
+    paddingVertical: 15,
+    borderBottomWidth: 0.5,
+    borderColor: '#ccc',
+  },
+});
 
 export default FinancialReportTable;

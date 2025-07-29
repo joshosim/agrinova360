@@ -218,8 +218,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 16,
+    fontFamily: 'SoraBold',
     marginBottom: 12,
   },
   row: {
@@ -232,10 +232,11 @@ const styles = StyleSheet.create({
     borderRadius: 10
   },
   rowText: {
-    fontSize: 16,
+    fontSize: 12,
   },
   rowAmount: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 14,
+    fontFamily: 'SoraBold',
+
   },
 });

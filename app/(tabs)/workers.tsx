@@ -70,6 +70,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: 'white' },
   title: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
   workerCard: { backgroundColor: '#eef2f3', padding: 15, marginBottom: 10, borderRadius: 10 },
-  name: { fontSize: 16 },
-  role: { fontSize: 14, color: 'gray' },
+  name: { fontSize: 12, fontFamily: 'SoraBold' },
+  role: { fontSize: 12, color: 'gray' },
 });

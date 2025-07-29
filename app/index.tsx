@@ -33,11 +33,11 @@ export default function Register() {
 
       <TouchableOpacity onPress={() => navigation.navigate(paths.auth.signup as never)}
         style={{ backgroundColor: "green", borderRadius: 10, padding: 20, marginTop: 30 }}>
-        <AppText style={{ textAlign: 'center', color: 'white', fontWeight: 600 }}>Create a new Farm</AppText>
+        <AppText style={{ textAlign: 'center', color: 'white', }}>Create a new Farm</AppText>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => setOpen(true)} style={{ backgroundColor: "green", borderRadius: 10, padding: 20, marginTop: 30 }}>
-        <AppText style={{ textAlign: 'center', color: 'white', fontWeight: 600 }}>Existing Farm</AppText>
+        <AppText style={{ textAlign: 'center', color: 'white', }}>Existing Farm</AppText>
       </TouchableOpacity>
 
       {open && (

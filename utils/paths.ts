@@ -2,7 +2,7 @@
 const paths = {
   home: "Tabs",
   inventory: "Inventory",
-  viewInventory: "ViewInventory",
+  InventoryDetails: "InventoryDetails",
   ViewWorker: "ViewWorker",
   finances: "Finances",
   addFinances: "AddFinances",

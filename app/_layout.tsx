@@ -8,7 +8,9 @@ import {
 import { useFonts } from 'expo-font';
 import { ActivityIndicator, Platform, StatusBar, View } from 'react-native';
 import 'react-native-reanimated';
+import { ToastProvider } from 'react-native-toast-notifications';
 import Router from './routes/Router';
+
 
 const queryClient = new QueryClient();
 
@@ -37,9 +39,12 @@ export default function RootLayout() {
       <StatusBar barStyle={Platform.OS === 'ios' ? 'light-content' : 'dark-content'} />
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <QueryClientProvider client={queryClient}>
-          <Router />
+          <ToastProvider>
+            <Router />
+          </ToastProvider>
         </QueryClientProvider>
       </ThemeProvider>
+
     </AuthProvider>
   );
 }

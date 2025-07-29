@@ -1,13 +1,14 @@
 import { AppText } from '@/components/AppText';
 import CustomBottomSheet from '@/components/BottomSheet';
+import InventoryCard from '@/components/InventoryCard';
+import { Loading } from '@/components/Loading';
 import { AppBar } from '@/components/ui/AppBar';
 import UnitDropdown from '@/components/UnitDropdown';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { fetchUserThatUploadedInventory, formatDateTime } from '@/utils/helpers';
-import paths from '@/utils/paths';
+import { addInventoryItem, fetchInventoryItems, fetchUserThatUploadedInventory } from '@/utils/helpers';
 import { Ionicons } from '@expo/vector-icons';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
@@ -24,6 +25,7 @@ import {
 } from 'react-native';
 import RNFS from 'react-native-fs';
 import ImageResizer from 'react-native-image-resizer';
+import { useToast } from 'react-native-toast-notifications';
 import { Camera, getCameraDevice } from 'react-native-vision-camera';
 
 export type RootStackParamList = {
@@ -46,8 +48,6 @@ export type RootStackParamList = {
 const Inventory = () => {
 
   const [cameraPermission, setCameraPermission] = useState<any>(null)
-  const [name, setName] = useState<string>('');
-  // const device = useCameraDevice('back');
   const devices = Camera.getAvailableCameraDevices()
   const device = getCameraDevice(devices, 'back', {
     physicalDevices: [
@@ -60,35 +60,20 @@ const Inventory = () => {
   const [capturePhoto, setCapturePhoto] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
-
-  const [inventoryItems, setInventoryItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
   const [bottomSheetVisible, setBottomSheetVisible] = useState(false);
   const [newItem, setNewItem] = useState({ item: '', quantity: '', unit: '' });
 
   const { user } = useAuth();
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const toast = useToast();
 
-  const fetchInventory = async () => {
-    if (!user?.organization_id) return;
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('inventory')
-      .select('*')
-      .eq('organization_id', user.organization_id)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching inventory:', error.message);
-      Alert.alert('Error', 'Failed to load inventory');
-    } else {
-      // setInventoryItems(data || []);
-      setInventoryItems((data || []).filter(item => item !== null && item.id));
-      console.log("Fetched inventory items:", data[0]);
-    }
-
-    setLoading(false);
-  };
+  const { data: inventoryItems = [], isLoading, error } = useQuery({
+    queryKey: ['inventory', user?.organization_id],
+    queryFn: () => {
+      if (!user?.organization_id) return undefined;
+      return fetchInventoryItems(user.organization_id);
+    },
+    enabled: !!user?.organization_id,
+  });
 
   const [uploaderMap, setUploaderMap] = useState<{ [key: string]: string }>({});
 
@@ -113,10 +98,50 @@ const Inventory = () => {
     fetchUploaderNames();
   }, [inventoryItems]);
 
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: addInventoryItem,
+    onSuccess: () => {
+
+      queryClient.invalidateQueries({ queryKey: ['inventory', user?.organization_id] });
+
+      setNewItem({ item: '', quantity: '', unit: '' });
+      setBottomSheetVisible(false);
+      setCapturePhoto(null);
+      toast.show("Added Successfully", {
+        type: "success",
+        placement: "top",
+        textStyle: { fontFamily: 'SoraRegular' },
+        duration: 1500,
+        animationType: "slide-in",
+        icon: <Ionicons name='checkmark-circle' size={25} color='white' />
+      });
+    },
+    onError: (error: any) => {
+      toast.show({
+        type: "warning",
+        placement: "top",
+        duration: 1500,
+        textStyle: { fontFamily: 'SoraRegular' },
+        animationType: "slide-in",
+        data: error.message,
+        icon: <Ionicons name='warning-outline' size={25} color='white' />
+      });
+    },
+  });
+
 
   const handleAddItem = async () => {
     if (!newItem.item || !newItem.quantity || !newItem.unit) {
-      Alert.alert('Error', 'Please fill in all fields');
+      toast.show("Please fill in all fields", {
+        type: "warning",
+        placement: "top",
+        duration: 1500,
+        textStyle: { fontFamily: 'SoraRegular' },
+        animationType: "slide-in",
+        icon: <Ionicons name='warning-outline' size={25} color='white' />
+      });
       return;
     }
 
@@ -182,15 +207,6 @@ const Inventory = () => {
       console.log("Public URL:", imageUrl);
     }
 
-    console.log("User context:", user);
-    console.log("New item payload:", {
-      name: newItem.item,
-      quantity: parseInt(newItem.quantity),
-      unit: newItem.unit,
-      organization_id: user.organization_id,
-      created_by: user.id,
-      image: imageUrl || null,
-    });
     const payload = {
       name: newItem.item,
       quantity: parseInt(newItem.quantity),
@@ -200,18 +216,7 @@ const Inventory = () => {
       image: imageUrl || null,
     };
 
-    const { data, error } = await supabase.from('inventory').insert([payload]).single();
-
-    if (error) {
-      console.error('Error adding inventory:', error.message);
-      Alert.alert('Error', 'Failed to add inventory item');
-    } else {
-      setInventoryItems([data, ...inventoryItems]);
-      setNewItem({ item: '', quantity: '', unit: '' });
-      setBottomSheetVisible(false);
-      setCapturePhoto(null);
-      Alert.alert('Success', 'Inventory item added');
-    }
+    mutation.mutate(payload)
   };
 
   const handleBottomSheetClose = () => {
@@ -253,10 +258,6 @@ const Inventory = () => {
 
   useEffect(() => {
     checkCameraPermission();
-  }, []);
-
-  useEffect(() => {
-    fetchInventory();
   }, []);
 
   if (cameraPermission === null) {
@@ -325,37 +326,22 @@ const Inventory = () => {
           color="black"
           onPress={() =>
             setBottomSheetVisible(true)} />} />
-      <FlatList
-        data={inventoryItems}
-        keyExtractor={(item, index) => item?.id?.toString() || index.toString()}
-        renderItem={({ item }) => {
-          const uploaderName = uploaderMap[item?.created_by] || "Unknown";
-
-          return (
-            <TouchableOpacity
-              onPress={() => navigation.navigate(
-                paths.viewInventory as any, { item } as never
-              )}
-              style={styles.card}
-            >
-              <View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <AppText style={[styles.item, { textTransform: 'uppercase' }]}>{item?.name}</AppText>
-                  <AppText style={[styles.item, { fontSize: 12 }]}>{formatDateTime(item?.created_at)}</AppText>
-                </View>
-
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <View>
-                    <AppText style={styles.quantity}>{item?.quantity} {item?.unit}</AppText>
-                    <AppText style={styles.quantity}>By {uploaderName}</AppText>
-                  </View>
-                  <Image source={{ uri: item?.image }} style={{ width: 50, height: 50, borderRadius: 10 }} />
-                </View>
-              </View>
-            </TouchableOpacity>
-          );
-        }}
-      />
+      {isLoading ?
+        <Loading /> :
+        <FlatList
+          style={{ marginBottom: 50 }}
+          data={inventoryItems}
+          keyExtractor={(item, index) => item?.id?.toString() || index.toString()}
+          renderItem={({ item }) => {
+            const uploaderName = uploaderMap[item?.created_by] || "Unknown";
+            return (
+              <InventoryCard
+                uploaderName={uploaderName}
+                item={item}
+              />
+            );
+          }}
+        />}
 
 
       {showCamera && device != null && (
@@ -399,14 +385,8 @@ const Inventory = () => {
           </View>
         </View>
       ) :
-        showCamera && (
-          // <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
-          //   <Button title="Take Photo" onPress={takePhoto} />
-          // </View>
-          <View />
-        )
-      }
-      {/* Custom Bottom Sheet */}
+        showCamera && <View />}
+
       <CustomBottomSheet
         visible={bottomSheetVisible}
         onClose={handleBottomSheetClose}
@@ -415,7 +395,6 @@ const Inventory = () => {
         <View style={styles.bottomSheetContent}>
           <AppText style={styles.bottomSheetTitle}>Add New Inventory Item</AppText>
 
-          {/* take a picture of the inventory item */}
           <View style={styles.formGroup}>
             <AppText style={styles.label}>Take a Photo</AppText>
             {!capturePhoto && (<TouchableOpacity
@@ -475,7 +454,9 @@ const Inventory = () => {
               style={styles.addButton}
               onPress={handleAddItem}
             >
-              <AppText style={styles.addButtonText}>Add Item</AppText>
+              <AppText style={styles.addButtonText}>
+                {mutation.isPending ? 'Adding...' : 'Add Item'}
+              </AppText>
             </TouchableOpacity>
           </View>
         </View>
@@ -489,7 +470,7 @@ export default Inventory;
 const styles = StyleSheet.create({
   captureButtonContainer: {
     position: 'absolute',
-    bottom: 40,
+    bottom: 100,
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
@@ -511,14 +492,13 @@ const styles = StyleSheet.create({
     padding: 6,
   },
   reButton: {
-
     backgroundColor: 'rgba(0,0,0,0.5)',
     borderRadius: 20,
-    padding: 6,
+    padding: 15
   },
   previewButtonContainer: {
     position: 'absolute',
-    bottom: 40,
+    bottom: 70,
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -547,7 +527,7 @@ const styles = StyleSheet.create({
     borderRadius: 10
   },
   item: {
-    fontSize: 16
+    fontSize: 12
   },
   quantity: {
     fontSize: 14,

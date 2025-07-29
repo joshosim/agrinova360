@@ -1,161 +1,159 @@
+import { WeatherAPIResponse } from '@/app/types/weather';
+import { useWeather } from '@/context/useWeather';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import axios from 'axios';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { AppText } from './AppText';
+import { Loading } from './Loading';
+import { WeatherStat } from './WeatherStat';
 
-export interface WeatherCondition {
-  code: number;
-  icon: string;
-  text: string;
-}
-
-export interface CurrentWeather {
-  cloud: number;
-  condition: WeatherCondition;
-  dewpoint_c: number;
-  dewpoint_f: number;
-  feelslike_c: number;
-  feelslike_f: number;
-  gust_kph: number;
-  gust_mph: number;
-  heatindex_c: number;
-  heatindex_f: number;
-  humidity: number;
-  is_day: number;
-  last_updated: string;
-  last_updated_epoch: number;
-  precip_in: number;
-  precip_mm: number;
-  pressure_in: number;
-  pressure_mb: number;
-  temp_c: number;
-  temp_f: number;
-  uv: number;
-  vis_km: number;
-  vis_miles: number;
-  wind_degree: number;
-  wind_dir: string;
-  wind_kph: number;
-  wind_mph: number;
-  windchill_c: number;
-  windchill_f: number;
-}
-
-export interface LocationInfo {
-  country: string;
-  lat: number;
-  lon: number;
-  localtime: string;
-  localtime_epoch: number;
-  name: string;
-  region: string;
-  tz_id: string;
-}
-
-export interface WeatherAPIResponse {
-  current: CurrentWeather;
-  location: LocationInfo;
-}
-
+const CITY_OPTIONS = [
+  { key: 'lagos', label: 'Lagos' },
+  { key: 'abuja', label: 'Abuja' },
+  { key: 'kano', label: 'Kano' },
+  { key: 'enugu', label: 'Enugu' },
+  { key: 'ibadan', label: 'Ibadan' },
+  { key: 'maiduguri', label: 'Maiduguri' },
+  { key: 'jos', label: 'Jos' },
+  { key: 'chicago', label: 'Chicago' },
+  { key: 'london', label: 'London' },
+  { key: 'bayelsa', label: 'Bayelsa' },
+  { key: 'enuu', label: 'Enugu' },
+  { key: 'ibadn', label: 'Ibadan' },
+  { key: 'maiduuri', label: 'Maiduguri' },
+  { key: 'jo', label: 'Jos' },
+  { key: 'chicao', label: 'Chicago' },
+  { key: 'londn', label: 'London' },
+  { key: 'bayesa', label: 'Bayelsa' },
+];
 
 const WeatherComponent = () => {
-  const [weather, setWeather] = useState<WeatherAPIResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [selectedFilter, setSelectedFilter] = React.useState(CITY_OPTIONS[0]);
+  const { data, isLoading, isError, error } = useWeather(selectedFilter.key);
+  const [open, setOpen] = React.useState(false);
+  const [showData, setShowData] = useState(false)
 
-  const fetchWeather = async () => {
-    try {
-      const response = await axios.get(
-        `http://api.weatherapi.com/v1/current.json?key=380bda3e94474ba2bad134414252707&q=Jos`);
-
-      setWeather(response.data);
-    } catch (error) {
-      console.error('Error fetching weather:', error);
-    } finally {
-      setLoading(false);
-    }
+  const handleSelectFilter = (filter: any) => {
+    setSelectedFilter(filter);
+    setOpen(false);
   };
 
-  useEffect(() => {
-    fetchWeather();
-  }, []);
-
-  if (loading) {
-    return <ActivityIndicator size="large" />;
+  if (isLoading) {
+    return <Loading style={{ marginTop: "50%" }} />;
   }
 
-  if (!weather) {
-    return <Text>Unable to load weather data.</Text>;
+  if (isError || !data) {
+    return <Text style={{ textAlign: 'center', marginTop: '50%' }}>Unable to load weather data.</Text>;
   }
-  console.log(weather)
+  console.log("error", error)
 
-  const todayDate = new Date()
+  const weather: WeatherAPIResponse = data;
+  const { location, current } = weather;
 
+  const todayDate = new Date();
   const formattedDate = new Intl.DateTimeFormat('en-GB', {
     weekday: 'long',
     day: '2-digit',
     month: 'long'
   }).format(todayDate);
 
-
   return (
     <View style={{ alignItems: 'center', marginTop: 20 }}>
       <AppText style={{ fontSize: 18, fontFamily: 'SoraBold', marginBottom: 4 }}>
         About Today
       </AppText>
-      <TouchableOpacity style={{
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
+
+      <TouchableOpacity style={styles.filterButton} onPress={() => setOpen(true)}>
         <Ionicons name='location-outline' size={20} color='black' />
-        <AppText>{weather.location.name}, {weather.location.country}</AppText>
+        <AppText>{selectedFilter.label}, {location?.country}</AppText>
         <MaterialIcons name='arrow-drop-down' size={20} color='black' />
       </TouchableOpacity>
 
       <Image
-        source={{ uri: `https:${weather.current.condition.icon}` }}
+        source={{ uri: `https:${current?.condition?.icon}` }}
         style={{ width: 120, height: 120, marginVertical: 10 }}
       />
 
-      <AppText> {formattedDate}</AppText>
+      <AppText>{formattedDate}</AppText>
 
-      <AppText
-        style={{ textAlign: 'center', fontSize: 30 }}>
-        {weather.current.temp_c}°C</AppText>
+      <AppText style={{ textAlign: 'center', fontSize: 30 }}>
+        {current?.temp_c}°C
+      </AppText>
 
       <View style={{
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center', gap: 20
+        alignItems: 'center',
+        gap: 20
       }}>
-        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-          <Image
-            source={{ uri: `https:${weather.current.condition.icon}` }}
-            style={{ width: 64, height: 64, marginVertical: 10 }}
-          />
-          <AppText>{weather.current.humidity}%</AppText>
-          <AppText>{weather.current.condition.text}</AppText>
-        </View>
-        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-          <Image
-            source={{ uri: `https:${weather.current.condition.icon}` }}
-            style={{ width: 64, height: 64, marginVertical: 10 }}
-          />
-          <AppText>{weather.current.wind_kph} km/h</AppText>
-          <AppText>Wind</AppText>
-        </View>
-        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-          <Image
-            source={{ uri: `https:${weather.current.condition.icon}` }}
-            style={{ width: 64, height: 64, marginVertical: 10 }}
-          />
-          <AppText>{weather.current.humidity}%</AppText>
-          <AppText>Humidity</AppText>
-        </View>
+        <WeatherStat icon={current.condition.icon} value={`${current.humidity}%`} label={current.condition.text} />
+        <WeatherStat icon={current.condition.icon} value={`${current.wind_kph} km/h`} label="Wind" />
+        <WeatherStat icon={current.condition.icon} value={`${current.humidity}%`} label="Humidity" />
       </View>
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={open}
+        onRequestClose={() => setOpen(false)}
+
+      >
+
+        <Pressable style={styles.modalOverlay} onPress={() => setOpen(false)}>
+          <View style={styles.bottomSheet}>
+            <AppText style={{ textAlign: 'center', fontFamily: 'SoraBold', fontSize: 16, textTransform: 'uppercase' }}>
+              Cities
+            </AppText>
+            <ScrollView>
+              {CITY_OPTIONS.map((filter) => (
+                <TouchableOpacity
+                  key={filter.key}
+                  onPress={() => handleSelectFilter(filter)}
+                  style={styles.optionItem}
+                >
+                  <AppText style={{ fontSize: 16 }}>{filter.label}</AppText>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </Pressable>
+
+      </Modal>
     </View>
   );
 };
 
 export default WeatherComponent;
+
+const styles = StyleSheet.create({
+  filterButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 3,
+    borderRadius: 10,
+    borderWidth: 0.5,
+    borderColor: '#ece7e4',
+    padding: 5,
+    marginBottom: 10,
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  bottomSheet: {
+    backgroundColor: '#fff',
+    paddingVertical: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+    height: '50%'
+  },
+  optionItem: {
+    paddingVertical: 15,
+    borderBottomWidth: 0.5,
+    borderColor: '#ccc',
+  },
+});
