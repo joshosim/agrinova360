@@ -4,36 +4,60 @@ import { Colors } from '@/constants/Colors';
 import { useAuth } from '@/context/AuthContext';
 import paths from '@/utils/paths';
 import { Ionicons } from '@expo/vector-icons';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { useMutation } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { Alert, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import * as Yup from 'yup';
 import { RootStackParamList } from './(tabs)/inventory';
 
+const schema = Yup.object().shape({
+  fullname: Yup.string().required('Full Name is required'),
+  phone: Yup.string().required('Phone Number is required'),
+  email: Yup.string().email('Invalid email').required('Email is required'),
+  password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+  farmCode: Yup.string().required('Farm Code is required'),
+});
+
 const FarmerSignup = () => {
-  const [email, setEmail] = useState<string>("")
-  const [fullname, setFullname] = useState<string>("")
-  const [phone, setPhone] = useState<string>("")
-  const [password, setPassword] = useState<string>("")
-  const [farmCode, setFarmCode] = useState<string>("")
-
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-
   const { signupAsFarmer } = useAuth();
 
-  const signUpTextFn = async () => {
-    try {
-      await signupAsFarmer(email, password, fullname, phone, farmCode);
+  const { control, handleSubmit, formState: { errors } } = useForm({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      fullname: '',
+      phone: '',
+      email: '',
+      password: '',
+      farmCode: '',
+    }
+  });
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (data: any) => {
+      const { email, password, fullname, phone, farmCode } = data;
+      return await signupAsFarmer(email, password, fullname, phone, farmCode);
+    },
+    onSuccess: () => {
       Alert.alert("Success", "Farmer account created. Check your email to verify your account.");
       navigation.navigate(paths.home as never);
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       console.error("Signup Error:", error.message);
-      Alert.alert("Error", error.message);
-    }
+      Alert.alert("Error", error.message || "Signup failed.");
+    },
+  });
+
+  const onSubmit = (data: any) => {
+    mutate(data);
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView style={styles.container}>
       <StatusBar style={Platform.OS === 'ios' ? "light" : "auto"} />
 
       <View>
@@ -41,53 +65,100 @@ const FarmerSignup = () => {
           <Ionicons name='fast-food' size={75} color={'green'} />
         </View>
         <AppText style={{ fontWeight: 600, fontSize: 25, textAlign: 'center', marginVertical: 20 }}>Create an account as a farmer🖋</AppText>
-        <AppText style={{ fontWeight: 300, fontSize: 16, textAlign: 'center', marginBottom: 40 }}>Please complete your profile to create an account with AgriNOVA360 with your farm's associated code.</AppText>
+        <AppText style={{ fontWeight: 300, fontSize: 12, textAlign: 'center', marginBottom: 40 }}>Please complete your profile to create an account with AgriNOVA360 with your farm's associated code.</AppText>
 
         <View style={{ width: "100%" }}>
-          <AuthTextFields
-            keyBoardType='default'
-            title="Full Name"
-            onChange={(text) => setFullname(text)}
-            value={fullname}
-            placeHolderText='Full Name'
-          />
-          <AuthTextFields
-            keyBoardType='default'
-            title="Phone Number"
-            onChange={(text) => setPhone(text)}
-            value={phone}
-            placeHolderText='Phone Number' />
-          <AuthTextFields
-            keyBoardType='email-address'
-            title="Email Address"
-            onChange={(text) => setEmail(text)}
-            value={email}
-            placeHolderText='Email Address' />
-          <AuthTextFields
-            keyBoardType='default'
-            title="Password"
-            onChange={(text) => setPassword(text)}
-            value={password}
-            placeHolderText='Password' />
+          <Controller
+            control={control}
+            name="fullname"
+            render={({ field: { onChange, value } }) => (
+              <AuthTextFields
+                keyBoardType='default'
+                title="Full Name"
+                onChange={onChange}
+                value={value}
+                placeHolderText='Full Name'
+              // ??errorText={errors.fullname ? errors.fullname.message || ''}
 
-          <AuthTextFields
-            keyBoardType='default'
-            title="Farm Code"
-            onChange={(text) => setFarmCode(text)}
-            value={farmCode}
-            placeHolderText='#FARMCODE' />
+              />
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="phone"
+            render={({ field: { onChange, value } }) => (
+              <AuthTextFields
+                keyBoardType='default'
+                title="Phone Number"
+                onChange={onChange}
+                value={value}
+                placeHolderText='Phone Number'
+              // errorText={errors.phone?.message}
+              />
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="email"
+            render={({ field: { onChange, value } }) => (
+              <AuthTextFields
+                keyBoardType='email-address'
+                title="Email Address"
+                onChange={onChange}
+                value={value}
+                placeHolderText='Email Address'
+              // errorText={errors.email?.message}
+              />
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, value } }) => (
+              <AuthTextFields
+                keyBoardType='default'
+                title="Password"
+                onChange={onChange}
+                value={value}
+                placeHolderText='Password'
+              // errorText={errors.password?.message}
+              />
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="farmCode"
+
+            render={({ field: { onChange, value } }) => (
+              <AuthTextFields
+                keyBoardType='default'
+                title="Farm Code"
+                onChange={onChange}
+                value={value}
+                placeHolderText='#FARMCODE'
+              // errorText={errors.farmCode?.message}
+              />
+            )}
+          />
         </View>
       </View>
 
-      <TouchableOpacity style={styles.button}
-        onPress={signUpTextFn}>
-        <AppText style={styles.buttonText}>Sign up</AppText>
+      <TouchableOpacity
+        style={[styles.button, isPending && { opacity: 0.5 }]}
+        onPress={handleSubmit(onSubmit)}
+        disabled={isPending}
+      >
+        <AppText style={styles.buttonText}>{isPending ? 'Signing up...' : 'Sign up'}</AppText>
       </TouchableOpacity>
     </ScrollView>
   )
 }
 
-export default FarmerSignup
+export default FarmerSignup;
 
 const styles = StyleSheet.create({
   container: {
@@ -108,5 +179,5 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: '400',
     fontSize: 18,
-  },
+  }
 })

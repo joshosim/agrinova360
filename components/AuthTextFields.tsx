@@ -8,9 +8,10 @@ interface AuthTextFieldsProps {
   placeHolderText: string;
   onChange: (text: string) => void;
   keyBoardType: 'email-address' | 'default',
+  errorText?: string;
 }
 
-const AuthTextFields = ({ title, onChange, value, placeHolderText, keyBoardType }: AuthTextFieldsProps) => {
+const AuthTextFields = ({ title, onChange, value, placeHolderText, keyBoardType, errorText }: AuthTextFieldsProps) => {
 
   return (
     <View style={styles.container}>
