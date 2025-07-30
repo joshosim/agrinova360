@@ -60,7 +60,7 @@ const FarmerSignup = () => {
     <ScrollView style={styles.container}>
       <StatusBar style={Platform.OS === 'ios' ? "light" : "auto"} />
 
-      <View>
+      <View style={{ flex: 1 }}>
         <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 20 }}>
           <Ionicons name='fast-food' size={75} color={'green'} />
         </View>
@@ -78,7 +78,7 @@ const FarmerSignup = () => {
                 onChange={onChange}
                 value={value}
                 placeHolderText='Full Name'
-              // ??errorText={errors.fullname ? errors.fullname.message || ''}
+              //errorText={errors.fullname ? errors.fullname.message || ''}
 
               />
             )}
@@ -165,19 +165,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
     padding: 10,
-    justifyContent: 'space-between'
+    marginBottom: 20
   },
   button: {
     backgroundColor: Colors.primary,
     width: "100%",
-    padding: 20,
-    marginBottom: 20,
+    padding: 15,
+    marginVertical: 20,
     borderRadius: 100,
     alignItems: 'center',
   },
   buttonText: {
     color: "white",
     fontWeight: '400',
-    fontSize: 18,
+    fontSize: 12,
   }
 })
