@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
-const baseURL = "http://api.weatherapi.com/v1";
+const baseURL = "https://api.weatherapi.com/v1";
 const apiKEY = "380bda3e94474ba2bad134414252707";
 // const baseURL = process.env.BASEURL;
 // const apiKEY = process.env.API_KEY;
