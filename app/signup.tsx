@@ -8,6 +8,7 @@ import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import { Alert, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useToast } from 'react-native-toast-notifications';
 import { RootStackParamList } from './(tabs)/inventory';
 
 const AuthSignup = () => {
@@ -20,11 +21,19 @@ const AuthSignup = () => {
   const { signupAsManager, loading } = useAuth();
 
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const toast = useToast()
 
   const signUpTextFn = async () => {
     try {
       await signupAsManager(email, password, fullname, farmName, phone, farmAddress);
-      Alert.alert("Success", "Manager account created. Check your email to verify your account.");
+      toast.show("Farm Account Created! Confirm your email now!", {
+        type: "success",
+        placement: "top",
+        textStyle: { fontFamily: 'SoraRegular' },
+        duration: 1500,
+        animationType: "slide-in",
+        icon: <Ionicons name='checkmark-circle' size={25} color='white' />
+      });
       navigation.navigate(paths.home as never);
     } catch (error: any) {
       console.error("Signup Error:", error.message);

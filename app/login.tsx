@@ -9,6 +9,7 @@ import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import { Alert, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useToast } from 'react-native-toast-notifications';
 import { RootStackParamList } from './(tabs)/inventory';
 
 export default function AuthLogin() {
@@ -22,10 +23,19 @@ export default function AuthLogin() {
   }
   const { login, loading } = useAuth();
 
+  const toast = useToast()
+
   const handleLogin = async () => {
     try {
       await login(email, password);
-      Alert.alert('Login Successful');
+      toast.show("Login Successful", {
+        type: "success",
+        placement: "top",
+        textStyle: { fontFamily: 'SoraRegular' },
+        duration: 1500,
+        animationType: "slide-in",
+        icon: <Ionicons name='checkmark-circle' size={25} color='white' />
+      });
       navigation.navigate(paths.home as never);
     } catch (error: any) {
       console.error('Login Error:', error.message);

@@ -11,6 +11,7 @@ import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Alert, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useToast } from 'react-native-toast-notifications';
 import * as Yup from 'yup';
 import { RootStackParamList } from './(tabs)/inventory';
 
@@ -37,13 +38,22 @@ const FarmerSignup = () => {
     }
   });
 
+  const toast = useToast()
+
   const { mutate, isPending } = useMutation({
     mutationFn: async (data: any) => {
       const { email, password, fullname, phone, farmCode } = data;
       return await signupAsFarmer(email, password, fullname, phone, farmCode);
     },
     onSuccess: () => {
-      Alert.alert("Success", "Farmer account created. Check your email to verify your account.");
+      toast.show("Farmer Account Created! Confirm your email now!", {
+        type: "success",
+        placement: "top",
+        textStyle: { fontFamily: 'SoraRegular' },
+        duration: 1500,
+        animationType: "slide-in",
+        icon: <Ionicons name='checkmark-circle' size={25} color='white' />
+      });
       navigation.navigate(paths.home as never);
     },
     onError: (error: any) => {
