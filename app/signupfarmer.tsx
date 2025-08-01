@@ -38,7 +38,7 @@ const FarmerSignup = () => {
     }
   });
 
-  const toast = useToast()
+  const toast = useToast();
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (data: any) => {
@@ -74,9 +74,15 @@ const FarmerSignup = () => {
         <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 20 }}>
           <Ionicons name='fast-food' size={75} color={'green'} />
         </View>
-        <AppText style={{ fontWeight: 600, fontSize: 25, textAlign: 'center', marginVertical: 20 }}>Create an account as a farmer🖋</AppText>
-        <AppText style={{ fontWeight: 300, fontSize: 12, textAlign: 'center', marginBottom: 40 }}>Please complete your profile to create an account with AgriNOVA360 with your farm's associated code.</AppText>
-
+        <AppText style={{
+          fontWeight: 600, fontSize: 25,
+          textAlign: 'center', marginVertical: 20
+        }}>Create an account as a farmer🖋</AppText>
+        <AppText style={{
+          fontWeight: 300, fontSize: 12,
+          textAlign: 'center', marginBottom: 40
+        }}>Please complete your profile to create an account with AgriNOVA360
+          with your farm's associated code.</AppText>
         <View style={{ width: "100%" }}>
           <Controller
             control={control}
@@ -89,7 +95,6 @@ const FarmerSignup = () => {
                 value={value}
                 placeHolderText='Full Name'
               //errorText={errors.fullname ? errors.fullname.message || ''}
-
               />
             )}
           />
