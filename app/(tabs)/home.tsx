@@ -155,19 +155,22 @@ export default function HomePage() {
           <AppText style={styles.sectionTitle}>Recent Inventory</AppText>
           <AppText style={styles.rowText}>See All</AppText>
         </View>
-        {inventory.slice(0, 3).map((item) => (
-          <View key={item.id} style={styles.row}>
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <Image source={{ uri: item.image }}
-                style={{ height: 40, width: 40, borderRadius: 100 }} />
-              <View style={{ gap: 6 }}>
-                <AppText style={[styles.rowText, { fontWeight: '600', textTransform: 'capitalize' }]}>{item.name}</AppText>
-                <AppText style={styles.rowText}>{formatDateTime(item.created_at)}</AppText>
+        {inventory
+          .slice(inventory.length - 3, inventory.length)
+          .reverse()
+          .map((item) => (
+            <View key={item.id} style={styles.row}>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <Image source={{ uri: item.image }}
+                  style={{ height: 40, width: 40, borderRadius: 100 }} />
+                <View style={{ gap: 6 }}>
+                  <AppText style={[styles.rowText, { fontWeight: '600', textTransform: 'capitalize' }]}>{item.name}</AppText>
+                  <AppText style={styles.rowText}>{formatDateTime(item.created_at)}</AppText>
+                </View>
               </View>
+              <AppText style={styles.rowAmount}>{item.quantity}</AppText>
             </View>
-            <AppText style={styles.rowAmount}>{item.quantity}</AppText>
-          </View>
-        ))}
+          ))}
       </View>
     </ScrollView>
   );

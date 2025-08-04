@@ -26,7 +26,7 @@ import {
 import RNFS from 'react-native-fs';
 import ImageResizer from 'react-native-image-resizer';
 import { useToast } from 'react-native-toast-notifications';
-import { Camera, getCameraDevice } from 'react-native-vision-camera';
+import { Camera, useCameraDevice } from 'react-native-vision-camera';
 
 export type RootStackParamList = {
   Home: undefined
@@ -48,14 +48,7 @@ export type RootStackParamList = {
 const Inventory = () => {
 
   const [cameraPermission, setCameraPermission] = useState<any>(null)
-  const devices = Camera.getAvailableCameraDevices()
-  const device = getCameraDevice(devices, 'back', {
-    physicalDevices: [
-      'ultra-wide-angle-camera',
-      'wide-angle-camera',
-      'telephoto-camera'
-    ]
-  })
+  const device = useCameraDevice('back')
   const camera = useRef<Camera>(null);
   const [capturePhoto, setCapturePhoto] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
