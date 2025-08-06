@@ -51,3 +51,15 @@ export interface WeatherAPIResponse {
   current: CurrentWeather;
   location: LocationInfo;
 }
+
+export interface FarmReportData {
+  section: string;
+  activities: string;
+  productionCount: string;
+  inputsUsed: string;
+  salesRevenue: string;
+  expensesIncurred: string;
+  casualties: string;
+  observations: string;
+  weather: string;
+}

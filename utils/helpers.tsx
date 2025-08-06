@@ -1,3 +1,4 @@
+import { FarmReportData } from "@/app/types/weather";
 import { supabase } from "@/lib/supabase";
 
 export const generateFarmCode = (): string => {
@@ -13,6 +14,19 @@ export const addInventoryItem = async (payload: any) => {
   const { data, error } = await supabase
     .from('inventory')
     .insert([payload])
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+};
+
+export const addFarmReport = async (report: FarmReportData & { organization_id: string }) => {
+  const { data, error } = await supabase
+    .from('reports')
+    .insert([report])
     .single();
 
   if (error) {
@@ -100,6 +114,18 @@ export const fetchInventory = async (organizationId: string) => {
 export const fetchInventoryItems = async (organization_id: string) => {
   const { data, error } = await supabase
     .from('inventory')
+    .select('*')
+    .eq('organization_id', organization_id)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  return data;
+};
+export const fetchFarmReports = async (organization_id: string) => {
+  const { data, error } = await supabase
+    .from('reports')
     .select('*')
     .eq('organization_id', organization_id)
     .order('created_at', { ascending: false });

@@ -111,7 +111,7 @@ const Inventory = () => {
         icon: <Ionicons name='checkmark-circle' size={25} color='white' />
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.show({
         type: "warning",
         placement: "top",
@@ -267,7 +267,9 @@ const Inventory = () => {
   }
 
   if (!device) {
-    return <AppText>No Camera Device Available</AppText>
+    return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <AppText>No Camera Device Available</AppText>
+    </View>
   }
 
   const takePhoto = async () => {
