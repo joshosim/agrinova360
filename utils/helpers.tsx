@@ -66,6 +66,21 @@ export const fetchOrganizationName = async (organizationId: string) => {
   return data.name;
 };
 
+export const fetchFarmCode = async (organizationId: string) => {
+  const { data, error } = await supabase
+    .from('organizations')
+    .select('farm_code')
+    .eq('id', organizationId)
+    .single();
+
+  if (error) {
+    console.error('Error fetching farm code:', error.message);
+    return null;
+  }
+
+  return data.farm_code;
+};
+
 export const fetchUserThatUploadedInventory = async (created_by: string) => {
   const { data, error } = await supabase
     .from('profiles')
@@ -87,6 +102,21 @@ export const formatDateTime = (isoString: string): string => {
 
   return `${day}/${month}/${year}`;
 };
+
+export const getProfilePhoto = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('profilePhoto')
+    .eq('id', userId)
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data?.profilePhoto || null; // return null if no photo
+};
+
 
 export const fetchInventoryLength = async () => {
   const { count, error } = await supabase
@@ -146,3 +176,43 @@ export const formatTime = (isoString: string): string => {
 
   return `${hours}:${minutes} ${ampm}`;
 };
+
+export const updateProfilePicture = async (userId: any, file: File) => {
+  // Create a unique filename to avoid overwriting
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${userId}-${Date.now()}.${fileExt}`;
+  const filePath = `${fileName}`;
+
+  // 1️⃣ Upload file to bucket
+  const { error: uploadError } = await supabase.storage
+    .from('profile-picture')
+    .upload(filePath, file, { upsert: true });
+
+  if (uploadError) {
+    throw new Error(`Upload failed: ${uploadError.message}`);
+  }
+
+  // 2️⃣ Get public URL
+  const { data: publicUrlData } = supabase.storage
+    .from('profile-picture')
+    .getPublicUrl(filePath);
+
+  const profilePhotoUrl = publicUrlData.publicUrl;
+
+  // 3️⃣ Update profiles table
+  const { data, error: updateError } = await supabase
+    .from('profiles')
+    .update({ profilePhoto: profilePhotoUrl })
+    .eq('id', userId)
+    .single();
+
+  if (updateError) {
+    throw new Error(`Profile update failed: ${updateError.message}`);
+  }
+
+  return data;
+};
+
+
+
+

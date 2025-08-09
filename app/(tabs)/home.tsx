@@ -1,27 +1,26 @@
 import { AppText } from '@/components/AppText';
+import { Loading } from '@/components/Loading';
 import { AppBar } from '@/components/ui/AppBar';
 import { lightGreen, mainLight } from '@/constants/Colors';
 import { useAuth } from '@/context/AuthContext';
-import { fetchInventory, fetchInventoryLength, fetchOrganizationName, fetchWorkerCount, formatDateTime } from '@/utils/helpers';
+import { fetchFarmCode, fetchInventory, fetchInventoryLength, fetchOrganizationName, fetchWorkerCount, formatDateTime } from '@/utils/helpers';
 import paths from '@/utils/paths';
 import { MaterialIcons } from '@expo/vector-icons';
+import Clipboard from '@react-native-clipboard/clipboard';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useToast } from 'react-native-toast-notifications';
 import { RootStackParamList } from './inventory';
 
 export default function HomePage() {
+
+  const [code, setCode] = useState<string | null>(null);
 
   const recentTransactions = [
     { id: '1', title: "Sold Eggs", amount: "₦5,000" },
     { id: '2', title: "Bought Feed", amount: "₦12,000" },
     { id: '3', title: "Vet Visit", amount: "₦3,500" },
-  ];
-
-  const recentInventory = [
-    { id: '1', item: "Chicken Feed", quantity: 25 },
-    { id: '2', item: "Eggs", quantity: 120 },
-    { id: '3', item: "Vaccines", quantity: 10 },
   ];
 
   const { user, loading } = useAuth();
@@ -46,7 +45,26 @@ export default function HomePage() {
     console.log('Inventory Length', inventory.length)
   }, [])
 
+  const toast = useToast();
+  const copyToClipboard = async (code: string) => {
+    await Clipboard.setString(code || '');
+    toast.show(`${code} copied to clipboard`, {
+      type: 'success',
+      placement: 'center',
+      duration: 1000,
+      animationType: 'slide-in',
+    });
+  };
 
+  useEffect(() => {
+    const getFarmCode = async () => {
+      if (!user?.organization_id) return;
+      const code = await fetchFarmCode(user.organization_id);
+      setCode(code);
+    };
+
+    getFarmCode();
+  }, [user]);
 
   useEffect(() => {
     const getCount = async () => {
@@ -62,7 +80,6 @@ export default function HomePage() {
   }, []);
 
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-
 
   useEffect(() => {
     const getOrganization = async () => {
@@ -117,10 +134,18 @@ export default function HomePage() {
             />
           </View>
         }
-      /> : <AppText>Loading...</AppText>}
+      /> : <Loading />}
       {/* Dashboard Summary */}
       <View>
         <AppText style={{ marginBottom: 4 }}>Hi, {user?.fullname}</AppText>
+        {user?.role === 'Manager' && (
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <AppText style={{ marginBottom: 4 }}>Farm Code: <AppText style={{ fontFamily: 'SoraBold' }}>{code}</AppText></AppText>
+            <TouchableOpacity onPress={() => copyToClipboard(code || '')} style={{ marginLeft: 6 }}>
+              <MaterialIcons name="content-copy" size={15} color="#555" />
+            </TouchableOpacity>
+          </View>
+        )}
         <AppText style={styles.sectionTitle}>Track Summary</AppText>
         <View style={styles.dashboardRow}>
           <Card title='Workers' value={orgWorkers} icon={require("../../assets/images/farmer.jpeg")} />
