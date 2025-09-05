@@ -61,12 +61,11 @@ const Profile = () => {
 
   const toast = useToast()
 
-  const pickImage = () => {
+  const pickImage = (userId: string) => {
     launchImageLibrary({ mediaType: 'photo' }, async (response) => {
       if (response.didCancel) return;
       if (response.errorCode) {
-        toast.show('Error picking image', { type: 'danger' });
-        console.error('ImagePicker Error: ', response.errorMessage);
+        console.error('ImagePicker Error:', response.errorMessage);
         return;
       }
 
@@ -74,18 +73,17 @@ const Profile = () => {
       if (!asset?.uri) return;
 
       try {
-        // Convert URI to Blob (works for expo-file-system or fetch)
-        const responseBlob = await fetch(asset.uri);
-        const blob = await responseBlob.blob();
-
-        // Create a File object from the Blob
-        const file = new File([blob], asset.fileName || 'profile.jpg', { type: asset.type || 'image/jpeg' });
-
-        const updatedProfile = await updateProfilePicture(user?.id, file);
+        const updatedProfile = await updateProfilePicture(
+          userId,
+          asset.uri,
+          asset.fileName,
+          asset.type
+        );
+        console.log('✅ Profile updated:', updatedProfile);
         toast.show('Profile picture updated!', { type: 'success' });
-        console.log(updatedProfile);
-      } catch (error: any) {
-        toast.show(error.message, { type: 'danger' });
+      } catch (err: any) {
+        console.error('❌ Error updating profile:', err.message);
+        toast.show(err.message, { type: 'danger' });
       }
     });
   };
@@ -113,7 +111,8 @@ const Profile = () => {
   }
 
   return (
-    <ScrollView style={{ backgroundColor: 'white', flex: 1, padding: 15, marginBottom: 20 }}>
+    <ScrollView
+      style={{ backgroundColor: 'white', flex: 1, padding: 15, marginBottom: 20 }}>
       <AppBar title='Profile'
 
         onGoBack={<MaterialIcons
@@ -134,7 +133,7 @@ const Profile = () => {
           bottom: 0, padding: 6,
         }}>
           <Ionicons
-            onPress={pickImage}
+            onPress={() => pickImage(user?.id!)}
             name='camera-sharp' size={25} color={"green"} style={{
             }} />
         </View>
@@ -171,7 +170,7 @@ const Profile = () => {
       <TouchableOpacity style={{
         flexDirection: 'row', alignItems: 'center',
         justifyContent: 'space-between', backgroundColor: '#EDD6C8',
-        padding: 20, borderRadius: 10, marginBottom: 10
+        padding: 20, borderRadius: 10, marginBottom: 40
       }}
         onPress={logout}
       >

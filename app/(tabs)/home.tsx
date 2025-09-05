@@ -146,12 +146,25 @@ export default function HomePage() {
             </TouchableOpacity>
           </View>
         )}
-        <AppText style={styles.sectionTitle}>Track Summary</AppText>
-        <View style={styles.dashboardRow}>
-          <Card title='Workers' value={orgWorkers} icon={require("../../assets/images/farmer.jpeg")} />
-          <Card title='Inventory' value={inventoryCount} icon={require("../../assets/images/inventory.jpeg")} />
+
+        {user?.role === 'Manager' && (
+          <>
+            <AppText style={styles.sectionTitle}>Track Summary</AppText>
+            <View style={styles.dashboardRow}>
+              <Card title='Workers' value={orgWorkers} icon={require("../../assets/images/farmer.jpeg")} />
+              <Card title='Inventory' value={inventoryCount} icon={require("../../assets/images/inventory.jpeg")} />
+              <Card title='Income' value={orgWorkers} icon={require("../../assets/images/sales.jpeg")} />
+            </View>
+          </>
+        )}
+
+        {user?.role !== 'Manager' && (
+
+
           <Card title='Income' value={orgWorkers} icon={require("../../assets/images/sales.jpeg")} />
-        </View>
+
+
+        )}
       </View>
       {/* Recent Transactions */}
       <View style={styles.section}>

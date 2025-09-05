@@ -218,58 +218,42 @@ const Inventory = () => {
     setCapturePhoto(null)
   };
 
-  const checkCameraPermission = async () => {
-    const status = await Camera.getCameraPermissionStatus()
-    console.log("STATUS", status);
-
-    if (status === 'granted') {
-      setCameraPermission(true)
-    } else if (status === 'not-determined') {
-      const permission = await Camera.requestCameraPermission()
-      setCameraPermission(permission === 'granted')
-    } else {
-      setCameraPermission(false);
-      Alert.alert(
-        'You need to allow microphone permission.',
-        'Please go to Settings and allow microphone permission',
-        [
-          {
-            text: 'Cancel',
-
-            style: 'cancel',
-          },
-          {
-            text: 'Open Settings',
-
-            onPress: Linking.openSettings,
-          },
-        ],
-      );
-    }
-    console.log('PERMISSION', cameraPermission);
-  }
-
   useEffect(() => {
-    checkCameraPermission();
+    const checkPermission = async () => {
+      const status = await Camera.getCameraPermissionStatus();
+      console.log("STATUS", status);
+
+      if (status === 'granted') {
+        setCameraPermission(true);
+      } else if (status === 'not-determined') {
+        const permission = await Camera.requestCameraPermission();
+        setCameraPermission(permission === 'granted');
+      } else {
+        setCameraPermission(false);
+      }
+    };
+
+    checkPermission();
   }, []);
 
+  // UI rendering
   if (cameraPermission === null) {
-    return <AppText>Checking camera permission...</AppText>
-  } else if (!cameraPermission) {
+    return <AppText>Checking camera permission...</AppText>;
+  }
+
+  if (!cameraPermission) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <AppText style={{ marginBottom: 20 }}>
           Camera permission is denied. Please enable it in settings.
         </AppText>
+        <Button title="Retry" onPress={async () => {
+          const permission = await Camera.requestCameraPermission();
+          setCameraPermission(permission === 'granted');
+        }} />
         <Button title="Open Settings" onPress={() => Linking.openSettings()} />
       </View>
     );
-  }
-
-  if (!device) {
-    return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <AppText>No Camera Device Available</AppText>
-    </View>
   }
 
   const takePhoto = async () => {

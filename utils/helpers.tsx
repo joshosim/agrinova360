@@ -177,41 +177,46 @@ export const formatTime = (isoString: string): string => {
   return `${hours}:${minutes} ${ampm}`;
 };
 
-export const updateProfilePicture = async (userId: any, file: File) => {
-  // Create a unique filename to avoid overwriting
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${userId}-${Date.now()}.${fileExt}`;
-  const filePath = `${fileName}`;
+export const updateProfilePicture = async (
+  userId: string,
+  uri: string,
+  fileName: string = 'profile.jpg',
+  mimeType: string = 'image/jpeg'
+) => {
+  // 1️⃣ Convert URI to Blob
+  const res = await fetch(uri);
+  const blob = await res.blob();
 
-  // 1️⃣ Upload file to bucket
+  // 2️⃣ Create unique path
+  const ext = fileName.split('.').pop() || 'jpg';
+  const path = `${userId}-${Date.now()}.${ext}`;
+
+  // 3️⃣ Upload blob to storage
   const { error: uploadError } = await supabase.storage
     .from('profile-picture')
-    .upload(filePath, file, { upsert: true });
+    .upload(path, blob, { contentType: mimeType, upsert: true });
 
-  if (uploadError) {
-    throw new Error(`Upload failed: ${uploadError.message}`);
-  }
+  if (uploadError) throw new Error(uploadError.message);
 
-  // 2️⃣ Get public URL
+  // 4️⃣ Get public URL
   const { data: publicUrlData } = supabase.storage
     .from('profile-picture')
-    .getPublicUrl(filePath);
+    .getPublicUrl(path);
 
-  const profilePhotoUrl = publicUrlData.publicUrl;
+  const publicUrl = publicUrlData.publicUrl;
 
-  // 3️⃣ Update profiles table
+  // 5️⃣ Update profiles table
   const { data, error: updateError } = await supabase
     .from('profiles')
-    .update({ profilePhoto: profilePhotoUrl })
+    .update({ profilePhoto: publicUrl })
     .eq('id', userId)
     .single();
 
-  if (updateError) {
-    throw new Error(`Profile update failed: ${updateError.message}`);
-  }
+  if (updateError) throw new Error(updateError.message);
 
   return data;
 };
+
 
 
 

@@ -2,7 +2,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 import * as React from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { AppText } from './AppText';
-import { ThemedView } from './ThemedView';
 import { FinancialReportCard } from './ui/FinancialCard';
 
 const FILTER_OPTIONS = [
@@ -34,7 +33,7 @@ const FinancialReportTable = () => {
   };
 
   return (
-    <ThemedView style={{ marginBottom: 300 }}>
+    <View style={{ marginBottom: 300 }}>
       <TouchableOpacity
         onPress={() => setOpen(true)}
         style={styles.filterButton}>
@@ -69,7 +68,7 @@ const FinancialReportTable = () => {
           </View>
         </Pressable>
       </Modal>
-    </ThemedView>
+    </View>
   );
 };
 
