@@ -25,7 +25,7 @@ export default function Register() {
   return (
     <View style={{ flex: 1, backgroundColor: 'white', padding: 20, }}>
 
-      <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 20 }}>
+      <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 50 }}>
         <Ionicons name='fast-food' size={75} color={'green'} />
       </View>
       <AppText style={{ fontWeight: 600, fontSize: 20, textAlign: 'center', marginTop: 20 }}>Welcome to AgriNova360</AppText>

@@ -1,5 +1,6 @@
 import { AppText } from '@/components/AppText';
 import AuthTextFields from '@/components/AuthTextFields';
+import { Loading } from '@/components/Loading';
 import { Colors } from '@/constants/Colors';
 import { useAuth } from '@/context/AuthContext';
 import paths from '@/utils/paths';
@@ -10,7 +11,7 @@ import { useMutation } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Alert, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useToast } from 'react-native-toast-notifications';
 import * as Yup from 'yup';
 import { RootStackParamList } from './(tabs)/inventory';
@@ -67,109 +68,125 @@ const FarmerSignup = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <StatusBar style={Platform.OS === 'ios' ? "light" : "auto"} />
-
-      <View style={{ flex: 1 }}>
-        <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 20 }}>
-          <Ionicons name='fast-food' size={75} color={'green'} />
-        </View>
-        <AppText style={{
-          fontWeight: 600, fontSize: 25,
-          textAlign: 'center', marginVertical: 20
-        }}>Create an account as a farmer🖋</AppText>
-        <AppText style={{
-          fontWeight: 300, fontSize: 12,
-          textAlign: 'center', marginBottom: 40
-        }}>Please complete your profile to create an account with AgriNOVA360
-          with your farm's associated code.</AppText>
-        <View style={{ width: "100%" }}>
-          <Controller
-            control={control}
-            name="fullname"
-            render={({ field: { onChange, value } }) => (
-              <AuthTextFields
-                keyBoardType='default'
-                title="Full Name"
-                onChange={onChange}
-                value={value}
-                placeHolderText='Full Name'
-              //errorText={errors.fullname ? errors.fullname.message || ''}
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="phone"
-            render={({ field: { onChange, value } }) => (
-              <AuthTextFields
-                keyBoardType='default'
-                title="Phone Number"
-                onChange={onChange}
-                value={value}
-                placeHolderText='Phone Number'
-              // errorText={errors.phone?.message}
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="email"
-            render={({ field: { onChange, value } }) => (
-              <AuthTextFields
-                keyBoardType='email-address'
-                title="Email Address"
-                onChange={onChange}
-                value={value}
-                placeHolderText='Email Address'
-              // errorText={errors.email?.message}
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="password"
-            render={({ field: { onChange, value } }) => (
-              <AuthTextFields
-                keyBoardType='default'
-                title="Password"
-                onChange={onChange}
-                value={value}
-                placeHolderText='Password'
-              // errorText={errors.password?.message}
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="farmCode"
-
-            render={({ field: { onChange, value } }) => (
-              <AuthTextFields
-                keyBoardType='default'
-                title="Farm Code"
-                onChange={onChange}
-                value={value}
-                placeHolderText='#FARMCODE'
-              // errorText={errors.farmCode?.message}
-              />
-            )}
-          />
-        </View>
-      </View>
-
-      <TouchableOpacity
-        style={[styles.button, isPending && { opacity: 0.5 }]}
-        onPress={handleSubmit(onSubmit)}
-        disabled={isPending}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+    >
+      <ScrollView
+        style={styles.container}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ flexGrow: 1 }}
       >
-        <AppText style={styles.buttonText}>{isPending ? 'Signing up...' : 'Sign up'}</AppText>
-      </TouchableOpacity>
-    </ScrollView>
+        <StatusBar style={Platform.OS === 'ios' ? "light" : "auto"} />
+
+        <View style={{ flex: 1 }}>
+          <View style={{
+            alignItems: 'center', justifyContent: 'center',
+            marginTop: 50
+          }}>
+            <Ionicons name='fast-food' size={75} color={'green'} />
+          </View>
+          <AppText style={{
+            fontWeight: 600, fontSize: 25,
+            textAlign: 'center', marginVertical: 20
+          }}>Create an account as a farmer🖋</AppText>
+          <AppText style={{
+            fontWeight: 300, fontSize: 12,
+            textAlign: 'center', marginBottom: 40
+          }}>Please complete your profile to create an account with AgriNOVA360
+            with your farm's associated code.</AppText>
+          <View
+            style={{ width: "100%" }}>
+            <Controller
+              control={control}
+              name="fullname"
+              render={({ field: { onChange, value } }) => (
+                <AuthTextFields
+                  keyBoardType='default'
+                  title="Full Name"
+                  onChange={onChange}
+                  value={value}
+                  placeHolderText='Full Name'
+                  errorText={errors.fullname ? errors.fullname.message || '' : ''}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="phone"
+              render={({ field: { onChange, value } }) => (
+                <AuthTextFields
+                  keyBoardType='default'
+                  title="Phone Number"
+                  onChange={onChange}
+                  value={value}
+                  placeHolderText='Phone Number'
+                  errorText={errors.phone?.message}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, value } }) => (
+                <AuthTextFields
+                  keyBoardType='email-address'
+                  title="Email Address"
+                  onChange={onChange}
+                  value={value}
+                  placeHolderText='Email Address'
+                  errorText={errors.email?.message}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, value } }) => (
+                <AuthTextFields
+                  keyBoardType='default'
+                  title="Password"
+                  onChange={onChange}
+                  value={value}
+                  placeHolderText='Password'
+                  errorText={errors.password?.message}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="farmCode"
+
+              render={({ field: { onChange, value } }) => (
+                <AuthTextFields
+                  keyBoardType='default'
+                  title="Farm Code"
+                  onChange={onChange}
+                  value={value}
+                  placeHolderText='#FARMCODE'
+                  errorText={errors.farmCode?.message}
+                />
+              )}
+            />
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.button, isPending && { opacity: 0.5 }]}
+          onPress={handleSubmit(onSubmit)}
+          disabled={isPending}
+        >
+          {isPending ? <Loading /> :
+            <AppText style={styles.buttonText}>Sign up</AppText>
+          }
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   )
 }
 

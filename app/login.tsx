@@ -1,20 +1,32 @@
 import { AppText } from '@/components/AppText';
 import AuthTextFields from '@/components/AuthTextFields';
 import { HelloWave } from '@/components/HelloWave';
+import { Loading } from '@/components/Loading';
 import { Colors } from '@/constants/Colors';
 import { useAuth } from '@/context/AuthContext';
 import paths from '@/utils/paths';
 import { Ionicons } from '@expo/vector-icons';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { Alert, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useToast } from 'react-native-toast-notifications';
+import * as yup from 'yup';
 import { RootStackParamList } from './(tabs)/inventory';
 
+const schema = yup.object().shape({
+  email: yup.string().email('Invalid email').required('Email is required'),
+  password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+});
+
+type LoginFormValues = {
+  email: string;
+  password: string;
+};
+
 export default function AuthLogin() {
-  const [email, setEmail] = useState<string>("")
-  const [password, setPassword] = useState<string>("")
 
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
@@ -23,11 +35,19 @@ export default function AuthLogin() {
   }
   const { login, loading } = useAuth();
 
+  const { control, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      email: '',
+      password: ''
+    }
+  });
+
   const toast = useToast()
 
-  const handleLogin = async () => {
+  const onSubmit = async (data: LoginFormValues) => {
     try {
-      await login(email, password);
+      await login(data.email, data.password);
       toast.show("Login Successful", {
         type: "success",
         placement: "top",
@@ -58,51 +78,62 @@ export default function AuthLogin() {
           <AppText style={{ fontWeight: 600, fontSize: 25, textAlign: 'center', marginVertical: 20 }}>Welcome Back</AppText>
           <HelloWave />
         </View>
-        <AppText style={{ fontWeight: 400, fontSize: 12, textAlign: 'center', marginBottom: 40 }}>Login to your AgriNOVA360 account</AppText>
+        <AppText style={{ fontWeight: 400, fontSize: 12, textAlign: 'center', marginBottom: 40 }}>Login to your AgriNOVA360 manager account</AppText>
 
         <View style={{ width: "100%" }}>
-          <AuthTextFields
-            keyBoardType='email-address'
-            title="Email Address"
-            onChange={(text) => setEmail(text)}
-            value={email}
-            placeHolderText='Email Address' />
-          <AuthTextFields
-            keyBoardType='default'
-            title="Password"
-            onChange={(text) => setPassword(text)}
-            value={password}
-            placeHolderText='Password' />
+          <Controller
+            control={control}
+            name="email"
+            render={({ field: { onChange, value } }) => (
+              <AuthTextFields
+                keyBoardType="email-address"
+                title="Email Address"
+                onChange={onChange}
+                value={value}
+                placeHolderText="Email Address"
+                errorText={errors.email?.message}
+              />
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, value } }) => (
+              <AuthTextFields
+                keyBoardType="default"
+                title="Password"
+                onChange={onChange}
+                value={value}
+                placeHolderText="Password"
+                errorText={errors.password?.message}
+                secureTextEntry
+              />
+            )}
+          />
 
           <View style={{ justifyContent: 'center', alignItems: 'center' }}>
             <TouchableOpacity
               style={{ flexDirection: 'row', gap: 2, alignItems: 'center', justifyContent: 'center' }}
               onPress={goToSignup}>
-              <AppText style={{ fontSize: 12 }}>Don't have an account?</AppText>
+              <AppText style={{ fontSize: 12 }}>Don't have a manager account?</AppText>
               <AppText style={{
                 textDecorationStyle: 'solid',
                 textDecorationLine: 'underline',
                 textDecorationColor: 'blue',
                 color: 'blue',
                 fontSize: 12
-              }}>Sign up here</AppText>
+              }}>Create a farm</AppText>
             </TouchableOpacity>
-            <AppText style={{ fontSize: 12 }}>Are you a farmer?</AppText>
-            <TouchableOpacity onPress={() => navigation.navigate(paths.auth.loginasfarmer as never)}>
-              <AppText style={{
-                textDecorationStyle: 'solid',
-                textDecorationLine: 'underline',
-                textDecorationColor: 'blue',
-                color: 'blue',
-                fontSize: 12
-              }}>Login as farmer here</AppText>
-            </TouchableOpacity>
+
           </View>
         </View>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <AppText style={styles.buttonText}>{loading ? "Logging in" : "Login"}</AppText>
+      <TouchableOpacity style={styles.button} onPress={handleSubmit(onSubmit)}>
+        {loading ? <Loading /> :
+          <AppText style={styles.buttonText}>Login</AppText>
+        }
       </TouchableOpacity>
     </ScrollView>
   )
