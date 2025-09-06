@@ -1,5 +1,7 @@
 import { FarmReportData } from "@/app/types/weather";
 import { supabase } from "@/lib/supabase";
+import * as FileSystem from "expo-file-system";
+import * as ImagePicker from "expo-image-picker";
 
 export const generateFarmCode = (): string => {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
@@ -177,47 +179,57 @@ export const formatTime = (isoString: string): string => {
   return `${hours}:${minutes} ${ampm}`;
 };
 
-export const updateProfilePicture = async (
-  userId: string,
-  uri: string,
-  fileName: string = 'profile.jpg',
-  mimeType: string = 'image/jpeg'
-) => {
-  // 1️⃣ Convert URI to Blob
-  const res = await fetch(uri);
-  const blob = await res.blob();
+export const pickAndUploadProfilePhoto = async (userId: string) => {
+  // 1. Pick an image
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.7,
+  });
 
-  // 2️⃣ Create unique path
-  const ext = fileName.split('.').pop() || 'jpg';
-  const path = `${userId}-${Date.now()}.${ext}`;
+  if (result.canceled) return null;
 
-  // 3️⃣ Upload blob to storage
+  const uri = result.assets[0].uri;
+  const fileExt = uri.split(".").pop();
+  // const fileName = `${userId}.${fileExt}`;
+  const fileName = `${userId}_${Date.now()}.${fileExt}`;
+  const filePath = `photos/${fileName}`;
+
+  // 2. Read the file as base64
+  const base64 = await FileSystem.readAsStringAsync(uri, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+
+  // 3. Convert base64 to Uint8Array
+  const uint8Array = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+
+  // 4. Upload to Supabase Storage
   const { error: uploadError } = await supabase.storage
-    .from('profile-picture')
-    .upload(path, blob, { contentType: mimeType, upsert: true });
+    .from("profile-picture") // 👈 make sure bucket name matches
+    .upload(filePath, uint8Array, {
+      contentType: `image/${fileExt}`,
+      upsert: true,
+    });
 
-  if (uploadError) throw new Error(uploadError.message);
+  if (uploadError) throw uploadError;
 
-  // 4️⃣ Get public URL
-  const { data: publicUrlData } = supabase.storage
-    .from('profile-picture')
-    .getPublicUrl(path);
+  // 5. Get public URL
+  const { data } = supabase.storage
+    .from("profile-picture")
+    .getPublicUrl(filePath);
 
-  const publicUrl = publicUrlData.publicUrl;
+  // const publicUrl = data.publicUrl;
+  const publicUrl = `${data.publicUrl}?t=${Date.now()}`;
 
-  // 5️⃣ Update profiles table
-  const { data, error: updateError } = await supabase
-    .from('profiles')
+
+  // 6. Save URL to profiles table
+  const { error: updateError } = await supabase
+    .from("profiles")
     .update({ profilePhoto: publicUrl })
-    .eq('id', userId)
-    .single();
+    .eq("id", userId);
 
-  if (updateError) throw new Error(updateError.message);
+  if (updateError) throw updateError;
 
-  return data;
+  return publicUrl;
 };
-
-
-
-
-
