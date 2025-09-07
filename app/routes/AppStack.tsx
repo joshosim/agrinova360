@@ -4,7 +4,6 @@ import TabLayout from '../(tabs)/_layout'
 import Workers from '../(tabs)/workers'
 import Finances from '../Finances'
 import NotFoundScreen from '../NotFound'
-import Onboarding from '../Onboarding'
 import Profile from '../Profile'
 import Settings from '../Settings'
 import InventoryDetails from '../ViewInventory'
@@ -22,7 +21,6 @@ const AppStack = () => {
       initialRouteName="Tabs"
     >
       <Stack.Screen name="Tabs" component={TabLayout} />
-      <Stack.Screen name="Onboarding" component={Onboarding} />
       <Stack.Screen name="Settings" component={Settings} />
       <Stack.Screen name="Finances" component={Finances} />
       <Stack.Screen name="InventoryDetails" component={InventoryDetails} />

@@ -8,10 +8,11 @@ import paths from '@/utils/paths';
 import { Ionicons } from '@expo/vector-icons';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { useMutation } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Alert, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useToast } from 'react-native-toast-notifications';
 import * as yup from 'yup';
 import { RootStackParamList } from './(tabs)/inventory';
@@ -45,9 +46,10 @@ export default function AuthLogin() {
 
   const toast = useToast()
 
-  const onSubmit = async (data: LoginFormValues) => {
-    try {
-      await login(data.email, data.password);
+  const mutation = useMutation({
+    mutationFn: (data: LoginFormValues) => login(data.email, data.password),
+    onSuccess: (data) => {
+      console.log("Login Successful", data);
       toast.show("Login Successful", {
         type: "success",
         placement: "top",
@@ -57,15 +59,16 @@ export default function AuthLogin() {
         icon: <Ionicons name='checkmark-circle' size={25} color='white' />
       });
       navigation.navigate(paths.home as never);
-    } catch (error: any) {
-      console.error('Login Error:', error.message);
-      Alert.alert('Login Failed', error.message);
+    },
+    onError: (error: any) => {
+      toast.show(error.response?.data?.message || error.message, { type: "danger" });
+      console.log("Login Failed", error);
     }
+  });
+
+  const onSubmit = (data: LoginFormValues) => {
+    mutation.mutate(data);
   };
-  const { user, setUser } = useAuth()
-
-  console.log("logged-out-user", user)
-
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -130,8 +133,10 @@ export default function AuthLogin() {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleSubmit(onSubmit)}>
-        {loading ? <Loading /> :
+      <TouchableOpacity
+        style={[styles.button, { padding: mutation.isPending ? 25 : 15 }]}
+        onPress={handleSubmit(onSubmit)}>
+        {mutation.isPending ? <Loading /> :
           <AppText style={styles.buttonText}>Login</AppText>
         }
       </TouchableOpacity>
@@ -150,7 +155,6 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: Colors.primary,
     width: "100%",
-    padding: 15,
     borderRadius: 100,
     alignItems: 'center',
     marginBottom: 20

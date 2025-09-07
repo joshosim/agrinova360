@@ -34,8 +34,9 @@ const AuthTextFields = ({ title, onChange, value, placeHolderText,
           onChangeText={onChange}
           style={[styles.textInput, secureTextEntry ? { flex: 1 } : {}]}
           placeholderTextColor={"gray"}
-          secureTextEntry={secureTextEntry && !showPassword}
-          autoCapitalize="none"
+        // secureTextEntry={secureTextEntry && !showPassword}
+        // autoCapitalize="none"
+
         />
         {secureTextEntry && (
           <TouchableOpacity
