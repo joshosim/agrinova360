@@ -4,12 +4,13 @@ import FinancialReportTable from '@/components/FinancialRecord'
 import { AppBar } from '@/components/ui/AppBar'
 import WeatherComponent from '@/components/WeatherReport'
 import { useAuth } from '@/context/AuthContext'
-import { addFarmReport, fetchFarmReports } from '@/utils/helpers'
+import { addFarmReport, fetchFarmReports, formatDateTime, formatTime } from '@/utils/helpers'
 import { Ionicons } from '@expo/vector-icons'
+import { yupResolver } from "@hookform/resolvers/yup"
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import React, { useState } from 'react'
+import { Controller, useForm } from "react-hook-form"
 import {
-  Alert,
   FlatList,
   ScrollView,
   StyleSheet,
@@ -18,13 +19,49 @@ import {
   View
 } from 'react-native'
 import { useToast } from 'react-native-toast-notifications'
+import * as yup from "yup"
 import { FarmReportData } from '../types/weather'
+
+const reportSchema = yup.object().shape({
+  section: yup.string().required("Section is required"),
+  activities: yup.string().required("Activities are required"),
+  productionCount: yup.string().required("Production count is required"),
+  casualties: yup.string().optional(),
+  observations: yup.string().optional(),
+  weather: yup.string().required("Weather is required"),
+  challenges: yup.string().optional(),
+  plans: yup.string().optional(),
+});
+
+const initialReportState = {
+  section: '',     // Crop, Livestock, Fisheries, Mixed
+  activities: '',   // planting, feeding, harvesting
+  productionCount: '',
+  casualties: '',
+  weather: '',
+  observations: '',
+  challenges: '',
+  plans: '',
+};
 
 const Reports = () => {
   const { user } = useAuth();
   const toast = useToast();
+  const [bottomSheetVisible, setBottomSheetVisible] = useState(false)
+  const queryClient = useQueryClient();
+  const [newReport, setNewReport] = useState<FarmReportData>(initialReportState);
 
-  const { data: reports, isLoading, error } = useQuery<FarmReportData[]>({
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(reportSchema),
+    defaultValues: initialReportState,
+  });
+
+  const { data: reports, isLoading } = useQuery({
     queryKey: ['farm_reports', user?.organization_id],
     queryFn: () => {
       if (!user?.organization_id) return undefined;
@@ -33,17 +70,14 @@ const Reports = () => {
     enabled: !!user?.organization_id,
   })
 
-  console.log("reports", reports)
-
-  const [bottomSheetVisible, setBottomSheetVisible] = useState(false)
-
-  const queryClient = useQueryClient();
+  console.log("reports",
+    reports
+  );
 
   const mutation = useMutation({
     mutationFn: (report: FarmReportData & { organization_id: string }) => addFarmReport(report),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['farm_reports', user?.organization_id] });
-
       setNewReport(initialReportState);
       setBottomSheetVisible(false);
       toast.show("Added Successfully", {
@@ -67,41 +101,20 @@ const Reports = () => {
     }
   });
 
-
-  const initialReportState = {
-    section: '',
-    activities: '',
-    productionCount: '',
-    inputsUsed: '',
-    salesRevenue: '',
-    expensesIncurred: '',
-    casualties: '',
-    observations: '',
-    weather: '',
-  };
-
-  const [newReport, setNewReport] = useState<FarmReportData>(initialReportState);
-
-  const handleAddReport = () => {
-    if (
-      !newReport.section || !newReport.activities ||
-      !newReport.productionCount || !newReport.inputsUsed
-    ) {
-      Alert.alert('Error', 'Please fill in required fields');
-      return;
-    }
-
+  const onSubmit = (data: any) => {
     mutation.mutate({
-      ...newReport,
+      ...data,
       organization_id: user?.organization_id as string,
     });
+    reset();
   };
 
   const handleBottomSheetClose = () => {
     setBottomSheetVisible(false)
   }
 
-  const [stateOfReport, setStateOfReport] = useState(0)
+  const [stateOfReport, setStateOfReport] = useState(user?.role === 'Manager' ? 0 : 1)
+  // 0 - Financial, 1 - Farm, 2 - Weather
 
   const changeStateOfReport = (theState: number) => {
     setStateOfReport(theState)
@@ -109,38 +122,28 @@ const Reports = () => {
 
   return (
     <View style={styles.container}>
-      <AppBar title='Reports'
-        onRight={<Ionicons
-          name='add-circle'
-          size={28}
-          color="black"
-          onPress={() => setBottomSheetVisible(true)} />} />
-      <View>
+      <AppBar title='Reports' />
+      <View >
         <View style={styles.topBarNav}>
-          <TouchableOpacity style={{
-            borderBottomWidth: stateOfReport === 0 ? 2 : 0,
-            borderBottomColor: 'black',
-            paddingBottom: 5
-          }} onPress={() => changeStateOfReport(0)}>
-            <AppText>Financial </AppText>
-          </TouchableOpacity>
-          <TouchableOpacity style={{
-            borderBottomWidth: stateOfReport === 1 ? 2 : 0,
-            borderBottomColor: 'black',
-            paddingBottom: 5
-          }} onPress={() => changeStateOfReport(1)}>
+          {user?.role === 'Manager' &&
+            <TouchableOpacity
+              style={[styles.topBarNavItem, stateOfReport === 0 ? styles.activeTab : {}]}
+              onPress={() => changeStateOfReport(0)}>
+              <AppText>Financial </AppText>
+            </TouchableOpacity>}
+          <TouchableOpacity
+            style={[styles.topBarNavItem, stateOfReport === 1 ? styles.activeTab : {}]}
+            onPress={() => changeStateOfReport(1)}>
             <AppText>Farm </AppText>
           </TouchableOpacity>
-          <TouchableOpacity style={{
-            borderBottomWidth: stateOfReport === 2 ? 2 : 0,
-            borderBottomColor: 'black',
-            paddingBottom: 5
-          }} onPress={() => changeStateOfReport(2)}>
+          <TouchableOpacity
+            style={[styles.topBarNavItem, stateOfReport === 2 ? styles.activeTab : {}]}
+            onPress={() => changeStateOfReport(2)}>
             <AppText>Weather </AppText>
           </TouchableOpacity>
         </View>
       </View>
-      <View>
+      <View style={{ flex: 1 }}>
         <View style={{ display: stateOfReport === 0 ? "flex" : "none" }}>
           <AppText style={{
             textAlign: 'center', fontSize: 20,
@@ -148,31 +151,42 @@ const Reports = () => {
           }}>Financial Report</AppText>
           <FinancialReportTable />
         </View>
-        <View style={{ display: stateOfReport === 1 ? "flex" : "none" }}>
+        <View style={{ display: stateOfReport === 1 ? "flex" : "none", flex: 1 }}>
+          <View style={styles.header}>
+            <AppText style={{
+              textAlign: 'center', fontSize: 20,
+              fontFamily: 'SoraBold'
+            }}>Farm Report</AppText>
+
+            <Ionicons
+              name='add-circle'
+              size={28}
+              color="black"
+              onPress={() => setBottomSheetVisible(true)} />
+          </View>
           <AppText style={{
-            textAlign: 'center', fontSize: 20,
-            fontFamily: 'SoraBold'
-          }}>Farm Report</AppText>
+            textAlign: 'left', fontSize: 12,
+            fontFamily: 'SoraRegular', color: 'gray', marginBottom: 10
+          }}>This is a daily report of the operations that were carried out on the farm.</AppText>
+
           <FlatList
             data={reports}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <View style={styles.reportCard}>
-                <AppText style={styles.date}>{item.date}</AppText>
+                <AppText style={{ alignSelf: 'flex-end' }}>{formatDateTime(item.created_at)} - {formatTime(item.created_at)}</AppText>
                 <AppText>📋 Section: {item.section}</AppText>
                 <AppText>🛠 Activities: {item.activities}</AppText>
                 <AppText>🐔 Production: {item.productionCount}</AppText>
-                <AppText>📦 Inputs Used: {item.inputsUsed}</AppText>
-                <AppText>💰 Sales: {item.salesRevenue}</AppText>
-                <AppText>💸 Expenses: {item.expensesIncurred}</AppText>
                 <AppText>⚠️ Casualties: {item.casualties}</AppText>
                 {item.observations ? <AppText>📝 Observations: {item.observations}</AppText> : null}
                 {item.weather ? <AppText>🌦 Weather: {item.weather}</AppText> : null}
                 <AppText>👤 Prepared By: {item.preparedBy}</AppText>
               </View>
             )}
+            contentContainerStyle={{ paddingBottom: 100 }}
+            style={{ flex: 1 }}
           />
-
 
           {/* Bottom Sheet */}
           <CustomBottomSheet
@@ -186,102 +200,114 @@ const Reports = () => {
               {/* Section */}
               <View style={styles.formGroup}>
                 <AppText style={styles.label}>Farm Section</AppText>
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. Poultry"
-                  value={newReport.section}
-                  onChangeText={(text) => setNewReport({ ...newReport, section: text })}
-                />
+                <Controller name='section' control={control}
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Select section (Crop, Livestock, Fisheries, Mixed)"
+                      value={value}
+                      onChangeText={onChange}
+                    />
+                  )} />{errors.section && <AppText style={{ color: "red" }}>{errors.section.message}</AppText>}
               </View>
+
 
               {/* Activities */}
               <View style={styles.formGroup}>
                 <AppText style={styles.label}>Activities Performed</AppText>
-                <TextInput
-                  style={styles.input}
-                  multiline
-                  placeholder="e.g. Collected eggs, cleaned cages..."
-                  value={newReport.activities}
-                  onChangeText={(text) => setNewReport({ ...newReport, activities: text })}
-                />
+                <Controller name='activities' control={control}
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      style={styles.input}
+                      multiline
+                      placeholder="e.g. Collected eggs, cleaned cages..."
+                      value={value}
+                      onChangeText={onChange}
+                    />)} />{errors.activities && <AppText style={{ color: "red" }}>{errors.activities.message}</AppText>}
               </View>
+
+
 
               {/* Production Count */}
               <View style={styles.formGroup}>
                 <AppText style={styles.label}>Production Count</AppText>
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. 250 eggs"
-                  value={newReport.productionCount}
-                  onChangeText={(text) => setNewReport({ ...newReport, productionCount: text })}
-                />
-              </View>
-
-              {/* Inputs Used */}
-              <View style={styles.formGroup}>
-                <AppText style={styles.label}>Inputs Used</AppText>
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. 20kg feed, vitamins"
-                  value={newReport.inputsUsed}
-                  onChangeText={(text) => setNewReport({ ...newReport, inputsUsed: text })}
-                />
-              </View>
-
-              {/* Sales Revenue */}
-              <View style={styles.formGroup}>
-                <AppText style={styles.label}>Sales/Revenue</AppText>
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. ₦10,000"
-                  value={newReport.salesRevenue}
-                  onChangeText={(text) => setNewReport({ ...newReport, salesRevenue: text })}
-                />
-              </View>
-
-              {/* Expenses Incurred */}
-              <View style={styles.formGroup}>
-                <AppText style={styles.label}>Expenses Incurred</AppText>
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. ₦2,000"
-                  value={newReport.expensesIncurred}
-                  onChangeText={(text) => setNewReport({ ...newReport, expensesIncurred: text })}
-                />
+                <Controller name='productionCount' control={control}
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      style={styles.input}
+                      placeholder="e.g. 250 eggs"
+                      value={value}
+                      onChangeText={onChange}
+                    />)} />{errors.productionCount && <AppText style={{ color: "red" }}>{errors.productionCount.message}</AppText>}
               </View>
 
               {/* Casualties */}
               <View style={styles.formGroup}>
                 <AppText style={styles.label}>Casualties</AppText>
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. 1 chick died"
-                  value={newReport.casualties}
-                  onChangeText={(text) => setNewReport({ ...newReport, casualties: text })}
-                />
+                <Controller name='casualties' control={control}
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      style={styles.input}
+                      placeholder="e.g. 1 chick died"
+                      value={value}
+                      onChangeText={onChange}
+                    />
+                  )} />{errors.casualties && <AppText style={{ color: "red" }}>{errors.casualties.message}</AppText>}
               </View>
 
               {/* Observations */}
               <View style={styles.formGroup}>
                 <AppText style={styles.label}>Observations</AppText>
-                <TextInput
-                  style={styles.input}
-                  multiline
-                  placeholder="Any notable remarks"
-                  value={newReport.observations}
-                  onChangeText={(text) => setNewReport({ ...newReport, observations: text })}
-                />
+                <Controller name='observations' control={control}
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      style={styles.input}
+                      multiline
+                      placeholder="Any notable remarks"
+                      value={value}
+                      onChangeText={onChange}
+                    />
+                  )} />{errors.observations && <AppText style={{ color: "red" }}>{errors.observations.message}</AppText>}
               </View>
 
               {/* Weather */}
               <View style={styles.formGroup}>
                 <AppText style={styles.label}>Weather</AppText>
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. Sunny, Rainy..."
-                  value={newReport.weather}
-                  onChangeText={(text) => setNewReport({ ...newReport, weather: text })}
-                />
+                <Controller name='weather' control={control}
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      style={styles.input}
+                      placeholder="e.g. Sunny, Rainy..."
+                      value={value}
+                      onChangeText={onChange}
+                    />
+                  )} />{errors.weather && <AppText style={{ color: "red" }}>{errors.weather.message}</AppText>}
+              </View>
+              {/* Weather */}
+              <View style={styles.formGroup}>
+                <AppText style={styles.label}>Challenges</AppText>
+                <Controller name='challenges' control={control}
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      style={styles.input}
+                      placeholder="e.g. Sunny, Rainy..."
+                      value={value}
+                      onChangeText={onChange}
+                    />
+                  )} />{errors.challenges && <AppText style={{ color: "red" }}>{errors.challenges.message}</AppText>}
+              </View>
+              {/* Weather */}
+              <View style={styles.formGroup}>
+                <AppText style={styles.label}>Plans Next Period</AppText>
+                <Controller name='plans' control={control}
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      style={styles.input}
+                      placeholder="e.g. Sunny, Rainy..."
+                      value={value}
+                      onChangeText={onChange}
+                    />
+                  )} />{errors.plans && <AppText style={{ color: "red" }}>{errors.plans.message}</AppText>}
               </View>
 
               <View style={styles.buttonContainer}>
@@ -294,7 +320,7 @@ const Reports = () => {
 
                 <TouchableOpacity
                   style={styles.addButton}
-                  onPress={handleAddReport}
+                  onPress={handleSubmit(onSubmit)}
                   disabled={mutation.isPending}
                 >
                   <AppText style={styles.addButtonText}>
@@ -306,7 +332,7 @@ const Reports = () => {
           </CustomBottomSheet>
 
         </View>
-        <View style={{ display: stateOfReport === 2 ? "flex" : "none" }}>
+        <View style={{ display: stateOfReport === 2 ? "flex" : "none", flex: 1 }}>
           <AppText style={{
             textAlign: 'center', fontSize: 20,
             fontFamily: 'SoraBold'
@@ -339,7 +365,6 @@ const styles = StyleSheet.create({
   summary: { fontSize: 14, marginBottom: 5 },
   casualty: { fontSize: 14, color: 'red' },
 
-  // Bottom Sheet Content
   bottomSheetContent: {
     flex: 1,
   },
@@ -397,6 +422,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     flexDirection: 'row',
-    paddingVertical: 10
+    padding: 5,
+    borderRadius: 10,
+    marginBottom: 10,
+    backgroundColor: '#f2f2f2',
+  },
+  topBarNavItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomColor: 'black',
+  },
+  activeTab: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15
   }
 });

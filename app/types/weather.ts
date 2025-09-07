@@ -53,13 +53,12 @@ export interface WeatherAPIResponse {
 }
 
 export interface FarmReportData {
-  section: string;
-  activities: string;
-  productionCount: string;
-  inputsUsed: string;
-  salesRevenue: string;
-  expensesIncurred: string;
-  casualties: string;
-  observations: string;
-  weather: string;
+  section: string,
+  activities: string,
+  productionCount: string,
+  casualties: string,
+  weather: string,
+  observations: string,
+  challenges: string,
+  plans: string,
 }
