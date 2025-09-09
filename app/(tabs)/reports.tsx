@@ -4,7 +4,7 @@ import FinancialReportTable from '@/components/FinancialRecord'
 import { AppBar } from '@/components/ui/AppBar'
 import WeatherComponent from '@/components/WeatherReport'
 import { useAuth } from '@/context/AuthContext'
-import { addFarmReport, fetchFarmReports, formatDateTime, formatTime } from '@/utils/helpers'
+import { addFarmReport, fetchFarmReports, formatDateTime, formatTime, getFullNameById } from '@/utils/helpers'
 import { Ionicons } from '@expo/vector-icons'
 import { yupResolver } from "@hookform/resolvers/yup"
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -70,12 +70,9 @@ const Reports = () => {
     enabled: !!user?.organization_id,
   })
 
-  console.log("reports",
-    reports
-  );
-
   const mutation = useMutation({
-    mutationFn: (report: FarmReportData & { organization_id: string }) => addFarmReport(report),
+    mutationFn: (report: FarmReportData & { organization_id: string }) =>
+      addFarmReport(report),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['farm_reports', user?.organization_id] });
       setNewReport(initialReportState);
@@ -119,6 +116,20 @@ const Reports = () => {
   const changeStateOfReport = (theState: number) => {
     setStateOfReport(theState)
   }
+
+  const ReporterName = ({ userId }: { userId: string }) => {
+    const [name, setName] = React.useState<string | null>(null);
+
+    React.useEffect(() => {
+      let mounted = true;
+      getFullNameById(userId).then((n) => {
+        if (mounted) setName(n);
+      });
+      return () => { mounted = false; };
+    }, [userId]);
+
+    return <AppText>👤 Prepared By: {name || userId}</AppText>;
+  };
 
   return (
     <View style={styles.container}>
@@ -172,18 +183,21 @@ const Reports = () => {
           <FlatList
             data={reports}
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View style={styles.reportCard}>
-                <AppText style={{ alignSelf: 'flex-end' }}>{formatDateTime(item.created_at)} - {formatTime(item.created_at)}</AppText>
-                <AppText>📋 Section: {item.section}</AppText>
-                <AppText>🛠 Activities: {item.activities}</AppText>
-                <AppText>🐔 Production: {item.productionCount}</AppText>
-                <AppText>⚠️ Casualties: {item.casualties}</AppText>
-                {item.observations ? <AppText>📝 Observations: {item.observations}</AppText> : null}
-                {item.weather ? <AppText>🌦 Weather: {item.weather}</AppText> : null}
-                <AppText>👤 Prepared By: {item.preparedBy}</AppText>
-              </View>
-            )}
+            renderItem={({ item }) => {
+
+              return (
+                <View style={styles.reportCard}>
+                  <AppText style={{ alignSelf: 'flex-end' }}>{formatDateTime(item.created_at)} - {formatTime(item.created_at)}</AppText>
+                  <AppText>📋 Section: {item.section}</AppText>
+                  <AppText>🛠 Activities: {item.activities}</AppText>
+                  <AppText>🐔 Production: {item.productionCount}</AppText>
+                  <AppText>⚠️ Casualties: {item.casualties}</AppText>
+                  {item.observations ? <AppText>📝 Observations: {item.observations}</AppText> : null}
+                  {item.weather ? <AppText>🌦 Weather: {item.weather}</AppText> : null}
+                  <ReporterName userId={item.preparedBy} />
+                </View>
+              )
+            }}
             contentContainerStyle={{ paddingBottom: 100 }}
             style={{ flex: 1 }}
           />

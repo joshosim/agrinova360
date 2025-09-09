@@ -1,7 +1,27 @@
 import { FarmReportData } from "@/app/types/weather";
 import { supabase } from "@/lib/supabase";
+import { useQuery } from "@tanstack/react-query";
 import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
+
+export const useProfileName = (userId: string | null | undefined) => {
+  return useQuery({
+    queryKey: ["profileName", userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", userId)
+        .single();
+
+      if (error) throw new Error(error.message);
+      return data?.full_name ?? null;
+    },
+    enabled: !!userId, // only run if we have a userId
+  });
+};
+
 
 export const generateFarmCode = (): string => {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
@@ -94,7 +114,6 @@ export const fetchUserThatUploadedInventory = async (created_by: string) => {
   return data.fullname;
 };
 
-
 export const formatDateTime = (isoString: string): string => {
   const date = new Date(isoString);
 
@@ -118,7 +137,6 @@ export const getProfilePhoto = async (userId: string) => {
 
   return data?.profilePhoto || null; // return null if no photo
 };
-
 
 export const fetchInventoryLength = async () => {
   const { count, error } = await supabase
@@ -155,6 +173,7 @@ export const fetchInventoryItems = async (organization_id: string) => {
   }
   return data;
 };
+
 export const fetchFarmReports = async (organization_id: string) => {
   const { data, error } = await supabase
     .from('reports')
@@ -167,6 +186,7 @@ export const fetchFarmReports = async (organization_id: string) => {
   }
   return data;
 };
+
 export const formatTime = (isoString: string): string => {
   const date = new Date(isoString);
 
@@ -222,7 +242,6 @@ export const pickAndUploadProfilePhoto = async (userId: string) => {
   // const publicUrl = data.publicUrl;
   const publicUrl = `${data.publicUrl}?t=${Date.now()}`;
 
-
   // 6. Save URL to profiles table
   const { error: updateError } = await supabase
     .from("profiles")
@@ -233,3 +252,24 @@ export const pickAndUploadProfilePhoto = async (userId: string) => {
 
   return publicUrl;
 };
+
+export const getFullNameById = async (userId: string): Promise<string | null> => {
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("fullname")
+      .eq("id", userId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching profile:", error.message);
+      return null;
+    }
+
+    return data?.fullname || null;
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    return null;
+  }
+};
+

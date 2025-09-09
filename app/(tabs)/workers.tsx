@@ -44,22 +44,27 @@ const Workers = () => {
 
   }, [user])
 
+  console.log("this user role", user?.role)
+
   return (
     <View style={styles.container}>
-      <AppBar title='Workers' />
-
-      <FlatList
-        data={workers}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.workerCard}>
-            <AppText style={[styles.name, { fontWeight: 600 }]}>{item.fullname}</AppText>
-            <AppText style={styles.name}>{item.email}</AppText>
-            <AppText style={styles.name}>{item.phone}</AppText>
-            <AppText style={styles.role}>{item.role}</AppText>
-          </View>
-        )}
-      />
+      <AppBar title={user?.role === "Manager" ? 'Workers' : "Workers Calculator"} />
+      {user?.role === "Manager" ? (
+        <FlatList
+          data={workers}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.workerCard}>
+              <AppText style={[styles.name, { fontWeight: 600 }]}>{item.fullname}</AppText>
+              <AppText style={styles.name}>{item.email}</AppText>
+              <AppText style={styles.name}>{item.phone}</AppText>
+              <AppText style={styles.role}>{item.role}</AppText>
+            </View>
+          )}
+        />
+      ) : (
+        <AppText style={{ fontFamily: 'SoraRegular' }}>Worker Calculator Coming Soon!</AppText>
+      )}
     </View>
   )
 }
@@ -68,7 +73,6 @@ export default Workers
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: 'white' },
-  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
   workerCard: { backgroundColor: '#eef2f3', padding: 15, marginBottom: 10, borderRadius: 10 },
   name: { fontSize: 12, fontFamily: 'SoraBold' },
   role: { fontSize: 12, color: 'gray' },
