@@ -45,6 +45,19 @@ export const addInventoryItem = async (payload: any) => {
   return data;
 };
 
+export const deleteInventoryItem = async (itemId: string) => {
+  const { error } = await supabase
+    .from('inventory')
+    .delete()
+    .eq('id', itemId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { success: true };
+}
+
 export const addFarmReport = async (report: FarmReportData & { organization_id: string }) => {
   const { data, error } = await supabase
     .from('reports')
@@ -186,6 +199,19 @@ export const fetchFarmReports = async (organization_id: string) => {
   }
   return data;
 };
+
+export const deleteFarmReport = async (itemId: string) => {
+  const { error } = await supabase
+    .from('reports')
+    .delete()
+    .eq('id', itemId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { success: true };
+}
 
 export const formatTime = (isoString: string): string => {
   const date = new Date(isoString);

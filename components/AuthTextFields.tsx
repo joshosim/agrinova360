@@ -11,10 +11,11 @@ interface AuthTextFieldsProps {
   keyBoardType: 'email-address' | 'default',
   errorText?: string;
   secureTextEntry?: boolean;
+  textContentType?: "username" | "password" | "emailAddress" | "telephoneNumber" | undefined;
 }
 
 const AuthTextFields = ({ title, onChange, value, placeHolderText,
-  keyBoardType, errorText, secureTextEntry = false }: AuthTextFieldsProps) => {
+  keyBoardType, errorText, secureTextEntry = false, textContentType }: AuthTextFieldsProps) => {
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -34,9 +35,10 @@ const AuthTextFields = ({ title, onChange, value, placeHolderText,
           onChangeText={onChange}
           style={[styles.textInput, secureTextEntry ? { flex: 1 } : {}]}
           placeholderTextColor={"gray"}
-        // secureTextEntry={secureTextEntry && !showPassword}
-        // autoCapitalize="none"
-
+          // secureTextEntry={secureTextEntry && !showPassword}
+          autoCapitalize="none"
+          autoCorrect={false}
+          textContentType={textContentType}
         />
         {secureTextEntry && (
           <TouchableOpacity
