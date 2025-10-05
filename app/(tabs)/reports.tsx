@@ -5,7 +5,7 @@ import { Loading } from '@/components/Loading'
 import { AppBar } from '@/components/ui/AppBar'
 import WeatherComponent from '@/components/WeatherReport'
 import { useAuth } from '@/context/AuthContext'
-import { addFarmReport, deleteFarmReport, fetchFarmReports, formatDateTime, formatTime, getFullNameById } from '@/utils/helpers'
+import { addFarmReport, deleteFarmReport, fetchFarmReports, formatDateTime, getFullNameById } from '@/utils/helpers'
 import { Ionicons } from '@expo/vector-icons'
 import { yupResolver } from "@hookform/resolvers/yup"
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -125,8 +125,6 @@ const Reports = () => {
       setStateOfReport(theState)
       setLoading(false)
     }, 1000)
-
-
   }
 
   const ReporterName = ({ userId }: { userId: string }) => {
@@ -140,50 +138,52 @@ const Reports = () => {
       return () => { mounted = false; };
     }, [userId]);
 
-    return <AppText>👤 Prepared By: {name || userId}</AppText>;
+    return <View>
+      <AppText style={{ fontFamily: 'SoraBold' }}>Prepared By:</AppText>
+      <AppText>{name || userId}</AppText>
+    </View>;
   };
-
-
 
   const ReportModal = ({ onClose }: { onClose: () => void }) => {
     const item = data;
-    return <View style={{
-      position: 'absolute',
-      top: '20%',
-      right: '5%',
-      backgroundColor: 'gray',
-      borderRadius: 10,
-      padding: 15,
-      zIndex: 1000,
-      height: '60%',
-      width: '100%'
-      ,
-    }}>
-      <View style={{ justifyContent: 'space-between', alignItems: 'center', flexDirection: 'row' }}>
-        <AppText style={{ textAlign: 'center', fontFamily: 'SoraBold', fontSize: 20 }}>{item.section} Section</AppText>
-        <Ionicons name='close-circle' size={30} onPress={onClose} />
-      </View>
-      <AppText>{formatDateTime(item.created_at)} - {formatTime(item.created_at)}</AppText>
-
-      <AppText>🛠 Activities: {item.activities}</AppText>
-      <AppText>🐔 Production: {item.productionCount}</AppText>
-      <AppText>⚠️ Casualties: {item.casualties}</AppText>
-      {item.observations ? <AppText>📝 Observations: {item.observations}</AppText> : null}
-      {item.weather ? <AppText>🌦 Weather: {item.weather}</AppText> : null}
-      <ReporterName userId={item.preparedBy} />
-      <Ionicons name='trash' size={30} color='black' onPress={() => { }} />
-    </View>
+    return (
+      <View style={styles.reportModal}>
+        <View style={{ justifyContent: 'space-between', alignItems: 'center', flexDirection: 'row', marginBottom: 20 }}>
+          <AppText style={{ textAlign: 'center', fontFamily: 'SoraBold', fontSize: 20 }}>{item.section} Section</AppText>
+          <Ionicons name='close-circle' size={30} onPress={onClose} />
+        </View>
+        <AppText style={{ fontFamily: 'SoraBold' }}>Activities:</AppText>
+        <AppText>{item.activities}</AppText>
+        <AppText style={{ fontFamily: 'SoraBold' }}>Production: </AppText>
+        <AppText>{item.productionCount}</AppText>
+        <AppText style={{ fontFamily: 'SoraBold' }}> Casualties:</AppText>
+        <AppText>  {item.casualties}</AppText>
+        {item.observations ? <View>
+          <AppText style={{ fontFamily: 'SoraBold' }}>Observations:</AppText>
+          <AppText> {item.observations}</AppText>
+        </View> : null}
+        {item.weather ?
+          <View>
+            <AppText style={{ fontFamily: 'SoraBold' }}> Weather:</AppText>
+            <AppText>{item.weather}</AppText>
+          </View> : null}
+        <ReporterName userId={item.preparedBy} />
+        <Ionicons
+          style={{ position: 'absolute', bottom: 0, left: '40%', margin: 20 }}
+          name='trash' size={30} color='black' onPress={() => deleteMutation.mutate(item.id)} />
+      </View>)
   }
 
   const deleteMutation = useMutation({
     mutationFn: (itemId: string) => deleteFarmReport(itemId),
     onSuccess: () => {
-
+      setOpenModal(false)
+      toast.show('Report Deleted!', { type: 'success' })
+      queryClient.invalidateQueries({ queryKey: ['farm_reports', user?.organization_id] });
     },
     onError: (err) => {
       console.error('The item couldn\'t delete because: ', err)
     }
-
   })
 
   return (
@@ -508,5 +508,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 15
+  },
+  reportModal: {
+    flex: 1,
+    position: 'absolute',
+    top: '20%',
+    right: '5%',
+    backgroundColor: 'gray',
+    borderRadius: 10,
+    padding: 15,
+    zIndex: 1000,
+    height: '60%',
+    width: '100%',
+    boxShadow: '3px 5px 3px gray',
+
   }
 });
