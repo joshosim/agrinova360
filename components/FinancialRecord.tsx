@@ -1,4 +1,7 @@
+import { useAuth } from '@/context/AuthContext';
+import { fetchFinancialReports } from '@/utils/helpers';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
 import * as React from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { AppText } from './AppText';
@@ -12,18 +15,19 @@ const FILTER_OPTIONS = [
 ];
 
 const FinancialReportTable = () => {
-  const [items] = React.useState([
-    { key: 1, name: 'Sale of Eggs', amount: 45000, category: 'Income', date: '2025-07-10' },
-    { key: 2, name: 'Purchase of Chicken Feed', amount: 15000, category: 'Expense', date: '2025-07-12' },
-    { key: 3, name: 'Labor Wages Payment', amount: 30000, category: 'Expense', date: '2025-07-15' },
-    { key: 4, name: 'Sale of Broiler Chickens', amount: 120000, category: 'Income', date: '2025-07-18' },
-    { key: 5, name: 'Veterinary Services', amount: 10000, category: 'Expense', date: '2025-07-20' },
-    { key: 6, name: 'Fertilizer Purchase', amount: 20000, category: 'Expense', date: '2025-07-22' },
-    { key: 7, name: 'Sale of Vegetables', amount: 50000, category: 'Income', date: '2025-07-23' },
-    { key: 8, name: 'Farm Equipment Maintenance', amount: 18000, category: 'Expense', date: '2025-07-24' },
-    { key: 9, name: 'Irrigation Pump Fuel', amount: 8000, category: 'Expense', date: '2025-07-25' },
-    { key: 10, name: 'Sale of Goat Milk', amount: 35000, category: 'Income', date: '2025-07-25' },
-  ]);
+
+  const { user } = useAuth()
+
+  const { data: reports, isLoading } = useQuery({
+    queryKey: ['financial_reports', user?.organization_id],
+    queryFn: () => {
+      if (!user?.organization_id) return undefined;
+      return fetchFinancialReports(user.organization_id);
+    },
+    enabled: !!user?.organization_id,
+  })
+
+  console.log("reports", reports)
   const [open, setOpen] = React.useState(false);
   const [selectedFilter, setSelectedFilter] = React.useState(FILTER_OPTIONS[0]);
 
@@ -33,7 +37,7 @@ const FinancialReportTable = () => {
   };
 
   return (
-    <View style={{ marginBottom: 300 }}>
+    <View style={{ marginBottom: 100 }}>
       <TouchableOpacity
         onPress={() => setOpen(true)}
         style={styles.filterButton}>
@@ -42,8 +46,8 @@ const FinancialReportTable = () => {
       </TouchableOpacity>
 
       <FlatList
-        data={items}
-        keyExtractor={(item) => item.key.toString()}
+        data={reports}
+        keyExtractor={(item) => item.key}
         renderItem={({ item }) => <FinancialReportCard item={item} />}
         contentContainerStyle={{ paddingBottom: 100 }}
       />

@@ -213,6 +213,19 @@ export const deleteFarmReport = async (itemId: string) => {
   return { success: true };
 }
 
+export const fetchFinancialReports = async (organization_id: string) => {
+  const { data, error } = await supabase
+    .from('financial')
+    .select('*')
+    .eq('organization_id', organization_id)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  return data;
+};
+
 export const formatTime = (isoString: string): string => {
   const date = new Date(isoString);
 
