@@ -55,6 +55,7 @@ const Inventory = () => {
   const [showCamera, setShowCamera] = useState(false);
   const [bottomSheetVisible, setBottomSheetVisible] = useState(false);
   const [newItem, setNewItem] = useState({ item: '', quantity: '', unit: '' });
+  const [loading, setLoading] = useState(true);
 
   const { user } = useAuth();
   const toast = useToast();
@@ -236,6 +237,15 @@ const Inventory = () => {
     checkPermission();
   }, []);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500); // wait 1.5s before showing inventories
+
+    return () => clearTimeout(timer);
+
+  }, [])
+
   // UI rendering
   if (cameraPermission === null) {
     return <AppText>Checking camera permission...</AppText>;
@@ -305,7 +315,7 @@ const Inventory = () => {
           color="black"
           onPress={() =>
             setBottomSheetVisible(true)} />} />
-      {isLoading ?
+      {loading || isLoading ?
         <Loading /> :
         <FlatList
           style={{ marginBottom: 50 }}

@@ -3,7 +3,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect } from 'react';
 import Register from '../Index';
-import AuthLogin from '../Login';
 import AuthLoginAsFarmer from '../LoginAsFarmer';
 import Onboarding from '../Onboarding';
 import AuthSignup from '../Signup';
@@ -44,7 +43,6 @@ const AuthStack = () => {
         (
           <>
             <Stack.Screen name="Index" component={Register} />
-            <Stack.Screen name="Login" component={AuthLogin} />
             <Stack.Screen name="LoginAsFarmer" component={AuthLoginAsFarmer} />
             <Stack.Screen name="SignupFarmer" component={FarmerSignup} />
             <Stack.Screen name="Signup" component={AuthSignup} />

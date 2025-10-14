@@ -86,6 +86,7 @@ export default function AuthLoginAsFarmer() {
                 value={value}
                 placeHolderText="Email Address"
                 errorText={errors.email?.message}
+                textContentType="emailAddress"
               />
             )}
           />
@@ -103,6 +104,8 @@ export default function AuthLoginAsFarmer() {
                 placeHolderText="Password"
                 errorText={errors.password?.message}
                 secureTextEntry={true}
+                textContentType='password'
+
               />
             )}
           />

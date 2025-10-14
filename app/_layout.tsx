@@ -39,7 +39,13 @@ export default function RootLayout() {
       <StatusBar barStyle={Platform.OS === 'ios' ? 'light-content' : 'dark-content'} />
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <QueryClientProvider client={queryClient}>
-          <ToastProvider>
+          <ToastProvider placement="bottom"
+            duration={2000}
+            animationType="slide-in"
+            textStyle={{
+              fontFamily: "SoraRegular",
+              fontSize: 12,
+            }}>
             <Router />
           </ToastProvider>
         </QueryClientProvider>

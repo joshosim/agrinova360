@@ -3,9 +3,10 @@ import { ActivityIndicator, StyleProp, View, ViewStyle } from 'react-native';
 
 interface LoadingProps {
   style?: StyleProp<ViewStyle>;
+  size?: number | 'small' | 'large';
 }
 
-export const Loading: React.FC<LoadingProps> = ({ style }) => {
+export const Loading: React.FC<LoadingProps> = ({ style, size = 'small' }) => {
   return (
     <View
       style={[
@@ -17,7 +18,7 @@ export const Loading: React.FC<LoadingProps> = ({ style }) => {
         style,
       ]}
     >
-      <ActivityIndicator color={'#000'} animating={true} size="small" />
+      <ActivityIndicator color={'#000'} animating={true} size={size} />
     </View>
   );
 };

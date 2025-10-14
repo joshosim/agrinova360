@@ -1,13 +1,14 @@
+import { formatTime } from "@/utils/helpers";
 import { StyleSheet, View } from "react-native";
 import { AppText } from "../AppText";
 
 export const FinancialReportCard = ({ item }: { item: any }) => (
   <View style={styles.card}>
-    <AppText style={styles.title}>{item.key}. {item.name}</AppText>
+    <AppText style={styles.title}>{item.id}. {item.title}</AppText>
     <View style={styles.infoRow}>
-      <AppText style={styles.category}>{item.category}</AppText>
+      <AppText style={styles.category}>{item.type}</AppText>
       <AppText style={styles.amount}>₦{item.amount.toLocaleString()}</AppText>
-      <AppText style={styles.date}>{item.date}</AppText>
+      <AppText style={styles.date}>{formatTime(item.date)}</AppText>
     </View>
   </View>
 );

@@ -7,7 +7,6 @@ const paths = {
   finances: "Finances",
   addFinances: "AddFinances",
   auth: {
-    login: "Login",
     loginasfarmer: "LoginAsFarmer",
     signup: "Signup"
   },

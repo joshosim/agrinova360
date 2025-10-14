@@ -2,41 +2,37 @@ import { WeatherAPIResponse } from '@/app/types/weather';
 import { useWeather } from '@/context/useWeather';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { AppText } from './AppText';
 import { Loading } from './Loading';
 import { WeatherStat } from './WeatherStat';
 
-const CITY_OPTIONS = [
-  { key: 'lagos', label: 'Lagos' },
-  { key: 'abuja', label: 'Abuja' },
-  { key: 'kano', label: 'Kano' },
-  { key: 'enugu', label: 'Enugu' },
-  { key: 'ibadan', label: 'Ibadan' },
-  { key: 'maiduguri', label: 'Maiduguri' },
-  { key: 'jos', label: 'Jos' },
-  { key: 'chicago', label: 'Chicago' },
-  { key: 'london', label: 'London' },
-  { key: 'bayelsa', label: 'Bayelsa' },
-  { key: 'enuu', label: 'Enugu' },
-  { key: 'ibadn', label: 'Ibadan' },
-  { key: 'maiduuri', label: 'Maiduguri' },
-  { key: 'jo', label: 'Jos' },
-  { key: 'chicao', label: 'Chicago' },
-  { key: 'londn', label: 'London' },
-  { key: 'bayesa', label: 'Bayelsa' },
-];
+import rawCountriesData from '../data/countries.json';
 
 const WeatherComponent = () => {
-  const [selectedFilter, setSelectedFilter] = React.useState(CITY_OPTIONS[0]);
-  const { data, isLoading, isError, error } = useWeather(selectedFilter.key);
+  const countriesData: Record<string, string[]> = rawCountriesData;
+  const COUNTRY_OPTIONS = Object.keys(countriesData).sort();
   const [open, setOpen] = React.useState(false);
-  const [showData, setShowData] = useState(false)
+  const [selectedCountry, setSelectedCountry] = useState('Nigeria')
+  const [selectedCity, setSelectedCity] = useState('Aba')
+  const [expandedCountry, setExpandedCountry] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const handleSelectFilter = (filter: any) => {
-    setSelectedFilter(filter);
-    setOpen(false);
-  };
+  const handleCountryClick = (country: string) => {
+    setExpandedCountry(expandedCountry === country ? null : country)
+    setSelectedCountry(country)
+  }
+
+  const handleCitySelect = (city: string) => {
+    setSelectedCity(city)
+    setOpen(false)
+    setExpandedCountry(null)
+    setSearchQuery('')
+  }
+
+  const { data, isLoading, isError, error } = useWeather(selectedCity);
+
+  const filteredCountry = COUNTRY_OPTIONS.filter(country => country.toLowerCase().includes(searchQuery.toLowerCase()))
 
   if (isLoading) {
     return <Loading style={{ marginTop: "50%" }} />;
@@ -48,6 +44,7 @@ const WeatherComponent = () => {
   console.log("error", error)
 
   const weather: WeatherAPIResponse = data;
+  console.log('weather', weather.location.name)
   const { location, current } = weather;
 
   const todayDate = new Date();
@@ -58,14 +55,14 @@ const WeatherComponent = () => {
   }).format(todayDate);
 
   return (
-    <View style={{ alignItems: 'center', marginTop: 20 }}>
+    <ScrollView contentContainerStyle={{ alignItems: 'center', marginTop: 20 }}>
       <AppText style={{ fontSize: 18, fontFamily: 'SoraBold', marginBottom: 4 }}>
         About Today
       </AppText>
 
       <TouchableOpacity style={styles.filterButton} onPress={() => setOpen(true)}>
         <Ionicons name='location-outline' size={20} color='black' />
-        <AppText>{selectedFilter.label}, {location?.country}</AppText>
+        <AppText>{selectedCity}, {selectedCountry}</AppText>
         <MaterialIcons name='arrow-drop-down' size={20} color='black' />
       </TouchableOpacity>
 
@@ -96,30 +93,61 @@ const WeatherComponent = () => {
         transparent={true}
         visible={open}
         onRequestClose={() => setOpen(false)}
-
       >
-
         <Pressable style={styles.modalOverlay} onPress={() => setOpen(false)}>
           <View style={styles.bottomSheet}>
+            <Ionicons color='black' name="close" size={30} style={{ alignSelf: 'flex-end', marginVertical: 15 }} />
             <AppText style={{ textAlign: 'center', fontFamily: 'SoraBold', fontSize: 16, textTransform: 'uppercase' }}>
-              Cities
+              Select City of Your Choice
             </AppText>
+            <TextInput
+              placeholder='Search City'
+              style={{ borderColor: 'black', borderBottomWidth: 2, marginBottom: 20, padding: 8 }}
+              onChangeText={setSearchQuery}
+              value={searchQuery}
+            />
             <ScrollView>
-              {CITY_OPTIONS.map((filter) => (
-                <TouchableOpacity
-                  key={filter.key}
-                  onPress={() => handleSelectFilter(filter)}
-                  style={styles.optionItem}
-                >
-                  <AppText style={{ fontSize: 16 }}>{filter.label}</AppText>
-                </TouchableOpacity>
-              ))}
+              {filteredCountry.map((country, i) => {
+
+                const cities = Array.isArray(countriesData[country])
+                  ? countriesData[country].sort()
+                  : [];
+                const isExpanded = expandedCountry === country;
+
+                return (
+                  <View key={i}>
+                    <Pressable
+                      style={[
+                        styles.countryButton,
+                        isExpanded && styles.countryButtonActive
+                      ]}
+                      onPress={() => handleCountryClick(country)}
+                    >
+                      <Text>{country}</Text>
+                      <MaterialIcons
+                        name={isExpanded ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
+                        size={24}
+                        color='black'
+                      />
+                    </Pressable>
+                    {isExpanded && cities.map((city, cityIndex) => (
+                      <Pressable
+                        key={cityIndex}
+                        style={styles.cityButton}
+                        onPress={() => handleCitySelect(city)}
+                      >
+                        <Text style={styles.cityText}>{city}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                )
+              })}
             </ScrollView>
           </View>
         </Pressable>
 
-      </Modal>
-    </View>
+      </Modal >
+    </ScrollView >
   );
 };
 
@@ -146,14 +174,37 @@ const styles = StyleSheet.create({
   bottomSheet: {
     backgroundColor: '#fff',
     paddingVertical: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
     paddingHorizontal: 20,
-    height: '50%'
+    height: '100%'
   },
   optionItem: {
     paddingVertical: 15,
     borderBottomWidth: 0.5,
     borderColor: '#ccc',
+  },
+  countryButton: {
+    padding: 15,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+    backgroundColor: '#fff',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  countryButtonActive: {
+    borderColor: '#000',
+    backgroundColor: '#f5f5f5',
+  },
+  cityButton: {
+    padding: 12,
+    paddingLeft: 30,
+    backgroundColor: '#fafafa',
+    borderLeftWidth: 3,
+    borderLeftColor: '#e0e0e0',
+  },
+  cityText: {
+    fontSize: 14,
+    color: '#333',
   },
 });
